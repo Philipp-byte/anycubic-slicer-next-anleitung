@@ -145,7 +145,7 @@ body.launch .stage{transform:scale(1.22); opacity:0}
    schnell rein, dann langes, weiches Ausrollen bis zur Mitte */
 .konvoi{
   position:relative;
-  animation:konvoiEin 3.4s cubic-bezier(.19,.86,.28,1) .3s both;
+  animation:konvoiEin 5.5s cubic-bezier(.3,.8,.25,1) .3s both;
 }
 @keyframes konvoiEin{
   from{transform:translateX(calc(-50vw - 180%))}
@@ -154,7 +154,7 @@ body.launch .stage{transform:scale(1.22); opacity:0}
 
 /* Das Logo: haengt am Seil, pendelt leicht beim Abbremsen, steht danach still */
 .logowrap{position:relative}
-.konvoi .logowrap{animation:schwanken 3.7s ease-in-out .3s both}
+.konvoi .logowrap{animation:schwanken 5.8s ease-in-out .3s both}
 @keyframes schwanken{
   0%{transform:rotate(1.4deg)}
   45%{transform:rotate(-1.3deg)}
@@ -272,9 +272,9 @@ body.launch .stage{transform:scale(1.22); opacity:0}
   border-radius:50%; opacity:0; transform:scale(.25);
   animation:padPuls 4.2s linear infinite;
 }
-.pad i:nth-child(1){animation-delay:4.3s}
-.pad i:nth-child(2){animation-delay:5.7s}
-.pad i:nth-child(3){animation-delay:7.1s}
+.pad i:nth-child(1){animation-delay:6.4s}
+.pad i:nth-child(2){animation-delay:7.8s}
+.pad i:nth-child(3){animation-delay:9.2s}
 @keyframes padPuls{
   0%{transform:scale(.25); opacity:0}
   12%{opacity:.5}
@@ -301,17 +301,13 @@ h1{
   font-size:clamp(23px,3.6vw,42px); line-height:1.1;
   font-weight:800; letter-spacing:.01em; color:#fff;
   text-shadow:0 0 42px rgba(168,255,0,.28);
-  animation:fadeUp .85s 2.9s both;
+  animation:fadeUp .85s 3.9s both;
 }
 h1 .thin{display:block; font-size:.5em; font-weight:600; letter-spacing:.3em;
   color:var(--neon); text-transform:uppercase; margin-bottom:.6em; text-shadow:none}
-.claim{
-  margin:0 auto; max-width:60ch; color:#B7C7C0; font-size:clamp(14px,1.35vw,16.5px);
-  line-height:1.6; animation:fadeUp .85s 3.05s both;
-}
 
 /* ---- Start-Button ---- */
-.cta{margin:clamp(18px,3.4vh,34px) 0 0; animation:fadeUp .85s 3.2s both}
+.cta{margin:clamp(18px,3.4vh,34px) 0 0; animation:fadeUp .85s 4.2s both}
 .start{
   position:relative; display:inline-flex; align-items:center; gap:16px;
   padding:18px 40px; border-radius:15px; cursor:pointer; overflow:hidden;
@@ -346,7 +342,7 @@ h1 .thin{display:block; font-size:.5em; font-weight:600; letter-spacing:.3em;
 }
 .hint{
   margin:16px 0 0; font:500 12px/1.5 var(--mono); letter-spacing:.14em;
-  color:var(--muted); text-transform:uppercase; animation:fadeUp .8s 3.35s both;
+  color:var(--muted); text-transform:uppercase; animation:fadeUp .8s 4.35s both;
 }
 .hint kbd{
   background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2);
@@ -358,7 +354,7 @@ h1 .thin{display:block; font-size:.5em; font-weight:600; letter-spacing:.3em;
 .stats{
   display:flex; flex-wrap:wrap; justify-content:center;
   gap:clamp(16px,3.4vw,48px); margin-top:clamp(20px,3.6vh,38px);
-  animation:fadeUp .9s 3.45s both;
+  animation:fadeUp .9s 4.45s both;
 }
 .stat{min-width:76px}
 .stat b{display:block; font-size:clamp(22px,3.4vw,34px); font-weight:800; color:var(--neon);
@@ -370,7 +366,7 @@ h1 .thin{display:block; font-size:.5em; font-weight:600; letter-spacing:.3em;
 .chips{
   display:flex; flex-wrap:wrap; justify-content:center; gap:9px;
   margin-top:clamp(18px,3vh,30px); max-width:820px;
-  animation:fadeUp .9s 3.55s both;
+  animation:fadeUp .9s 4.55s both;
 }
 .chip{
   font:600 11.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
@@ -412,9 +408,6 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
 @media (max-height:980px){
   .chips{display:none}
 }
-@media (max-height:820px){
-  .claim{display:none}
-}
 @media (max-height:680px){
   .hero{width:min(430px,64vw,46vh)}
   .hint{display:none}
@@ -426,7 +419,6 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
   .chips{display:none}
   .foot .rechts{display:none}
   .start{padding:17px 30px}
-  .claim{font-size:14.5px; max-width:34ch}
   .hero{width:min(340px,80vw,42vh)}
 }
 /* Touch-Geräte haben keine Enter-Taste */
@@ -659,12 +651,6 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
     Vom 3D-Modell zur druckfertigen Datei
   </h1>
 
-  <p class="claim">
-    Das interaktive Schülerhandbuch des BKWI: Schritt für Schritt vom Import über
-    Wandstärke, Füllmuster und Stützen bis zum fertigen G-Code – mit echten
-    Screenshots, Animationen und Messwerten aus dem Labor.
-  </p>
-
   <div class="cta">
     <a class="start" id="startBtn" href="anleitung.html">
       Start Learning
@@ -860,7 +846,7 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
       konvoi.addEventListener('animationend', function(ev){
         if(ev.animationName === 'konvoiEin') ankunft();
       });
-      setTimeout(ankunft, 4700);   /* Sicherheitsnetz */
+      setTimeout(ankunft, 7200);   /* Sicherheitsnetz */
     }
   })();
 
@@ -870,7 +856,7 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
   if(!wenigerBewegung) document.querySelectorAll('.stat b').forEach(function(el){
     var ziel = parseInt(el.dataset.count, 10), schritt = 0;
     el.textContent = '0';
-    var dauer = 1100, beginn = performance.now() + 3600;
+    var dauer = 1100, beginn = performance.now() + 4700;
     function tick(jetzt){
       if(jetzt < beginn){ requestAnimationFrame(tick); return; }
       var p = Math.min(1, (jetzt - beginn) / dauer);
