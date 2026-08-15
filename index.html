@@ -175,24 +175,14 @@ body.launch .stage{transform:scale(1.22); opacity:0}
   filter:blur(38px); animation:pulseGlow 4.6s ease-in-out infinite;
 }
 @keyframes pulseGlow{50%{opacity:.55; scale:.9}}
-/* Das Logo als leuchtende Tafel: Bild bleibt komplett, kein Freistellen -
-   das Schwarz des Bildes geht im dunklen Seitenhintergrund auf */
-.logowrap{
-  border-radius:20px; overflow:hidden; background:#000;
-  border:1px solid rgba(168,255,0,.4);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,.6),
-    0 0 46px rgba(168,255,0,.22),
-    0 26px 60px rgba(0,0,0,.65);
-  transition:border-color .3s ease, box-shadow .3s ease;
+/* Das Logo schwebt frei - sauber freigestellt, ohne Rahmen */
+.logowrap img{
+  display:block; width:100%; height:auto;
+  filter:drop-shadow(0 0 30px rgba(168,255,0,.4)) drop-shadow(0 16px 32px rgba(0,0,0,.6));
+  transition:filter .3s ease;
 }
-.logowrap img{display:block; width:100%; height:auto}
-.hero:hover .logowrap{
-  border-color:rgba(168,255,0,.85);
-  box-shadow:
-    0 0 0 1px rgba(0,0,0,.6),
-    0 0 70px rgba(168,255,0,.4),
-    0 26px 60px rgba(0,0,0,.65);
+.hero:hover .logowrap img{
+  filter:drop-shadow(0 0 46px rgba(168,255,0,.75)) drop-shadow(0 16px 32px rgba(0,0,0,.6));
 }
 
 /* Abschleppseil zwischen Logo und Zug */
