@@ -196,10 +196,10 @@ body.launch .stage{transform:scale(1.22); opacity:0}
 
 /* Der Zug: Hyperloop-Kapsel */
 .zug{
-  position:absolute; left:calc(99% + 72px); top:47%; width:min(400px,52vw);
+  position:absolute; left:calc(99% + 72px); top:47%; width:min(430px,54vw);
   transform:translateY(-50%);
 }
-.zug svg{display:block; width:100%; height:auto;
+.zug svg{display:block; width:100%; height:auto; overflow:visible;
   filter:drop-shadow(0 0 12px rgba(168,255,0,.32))}
 .zug .strahl{animation:strahlFlackern 2.8s ease-in-out infinite}
 @keyframes strahlFlackern{50%{opacity:.65}}
@@ -208,11 +208,45 @@ body.launch .stage{transform:scale(1.22); opacity:0}
 @keyframes feldFluss{to{stroke-dashoffset:-58}}
 .zug .blink{animation:blinken 1.5s steps(2,jump-none) infinite}
 @keyframes blinken{50%{opacity:.1}}
-.zug .magpad{animation:padGlimmen 2.2s ease-in-out infinite}
-.zug .magpad.b{animation-delay:1.1s}
-@keyframes padGlimmen{50%{opacity:.3}}
 .zug .reflex{animation:reflexLauf 4.6s ease-in-out infinite}
-@keyframes reflexLauf{0%,50%{transform:translateX(-90px)}92%,100%{transform:translateX(560px)}}
+@keyframes reflexLauf{0%,55%{transform:translateX(-40px)}90%,100%{transform:translateX(120px)}}
+
+/* Raeder drehen, die Treibstange laeuft im Kreis mit */
+.zug .rad, .zug .radS{transform-box:fill-box; transform-origin:center}
+.zug .rad{animation:radDreh .85s linear infinite}
+.zug .radS{animation:radDreh .55s linear infinite}
+@keyframes radDreh{to{transform:rotate(1turn)}}
+.zug .rodY{animation:rodAuf .85s infinite}
+.zug .rodX{animation:rodZu .85s infinite}
+@keyframes rodAuf{
+  0%{transform:translateY(0)} 25%{transform:translateY(14px)}
+  50%{transform:translateY(0)} 75%{transform:translateY(-14px)}
+  100%{transform:translateY(0)}
+}
+@keyframes rodZu{
+  0%{transform:translateX(0)} 25%{transform:translateX(-14px)}
+  50%{transform:translateX(-28px)} 75%{transform:translateX(-14px)}
+  100%{transform:translateX(0)}
+}
+
+/* Dampfwolken aus dem Schornstein */
+.zug .dampf{
+  opacity:0; transform-box:fill-box; transform-origin:center;
+  animation:dampfPuff 3s linear infinite;
+}
+.zug .dampf.d2{animation-delay:.6s}
+.zug .dampf.d3{animation-delay:1.2s}
+.zug .dampf.d4{animation-delay:1.8s}
+.zug .dampf.d5{animation-delay:2.4s}
+@keyframes dampfPuff{
+  0%{opacity:0; transform:translate(0,0) scale(.4)}
+  10%{opacity:.75}
+  100%{opacity:0; transform:translate(-70px,-52px) scale(3)}
+}
+
+/* Feuerbuechse glimmt orange */
+.zug .feuer{animation:feuerFlackern .5s ease-in-out infinite}
+@keyframes feuerFlackern{50%{opacity:.5}}
 
 /* Abfahrt: kurze Pause zum Abkoppeln, dann mit Lichtspur davon */
 .hero.frei .zug{animation:zugWeg 1.6s cubic-bezier(.55,0,.85,.36) .55s forwards}
@@ -453,7 +487,7 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
       </div>
       <div class="seil" aria-hidden="true"></div>
       <div class="zug" aria-hidden="true">
-        <svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 700 190" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="zrumpf" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stop-color="#31481A"/>
@@ -478,70 +512,142 @@ body.launch .flash{animation:flashOut .62s ease-out forwards}
               <stop offset="0" stop-color="rgba(168,255,0,.4)"/>
               <stop offset="1" stop-color="rgba(168,255,0,0)"/>
             </radialGradient>
-            <clipPath id="zkanzel">
-              <path d="M330 46 C382 42 442 52 482 68 L450 78 C414 60 366 54 332 56 Z"/>
+            <radialGradient id="zfeuer" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="rgba(255,170,50,.95)"/>
+              <stop offset=".6" stop-color="rgba(238,114,3,.55)"/>
+              <stop offset="1" stop-color="rgba(238,114,3,0)"/>
+            </radialGradient>
+            <clipPath id="zfenster">
+              <rect x="82" y="48" width="48" height="34" rx="3"/>
             </clipPath>
           </defs>
 
-          <!-- Bodenschein und Energiefeld -->
-          <ellipse cx="290" cy="148" rx="250" ry="11" fill="url(#zschein)"/>
-          <path class="feld" d="M50 146 L540 146" stroke="rgba(168,255,0,.5)"
+          <!-- Bodenschein, Schiene und Energiefeld -->
+          <ellipse cx="300" cy="176" rx="270" ry="10" fill="url(#zschein)"/>
+          <path d="M56 168 L648 168" stroke="rgba(168,255,0,.35)" stroke-width="2"/>
+          <path class="feld" d="M56 177 L560 177" stroke="rgba(168,255,0,.5)"
                 stroke-width="2.5" stroke-linecap="round" stroke-dasharray="17 12"/>
 
           <!-- Scheinwerferkegel voraus -->
-          <polygon class="strahl" points="560,88 700,62 700,126 560,102" fill="url(#zstrahl)"/>
+          <polygon class="strahl" points="556,52 700,24 700,100 556,74" fill="url(#zstrahl)"/>
 
-          <!-- Rumpf: flacher Keil, Cockpit-Buckel vorn, Nase rechts -->
-          <path d="M64 58 C38 63 22 78 22 94 C22 110 42 121 74 124 L300 129
-                   C430 129 514 118 556 101 C566 97 566 90 556 87
-                   C524 70 474 50 410 44 C310 34 150 44 64 58 Z"
-                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="2"/>
-          <!-- Lichtkante entlang der Dachlinie -->
-          <path d="M96 55 C240 41 380 40 468 58 C508 66 538 78 552 89" fill="none"
-                stroke="url(#zrim)" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- Dampfwolken -->
+          <circle class="dampf"    cx="485" cy="6"  r="11" fill="rgba(224,255,180,.75)"/>
+          <circle class="dampf d2" cx="490" cy="9"  r="8"  fill="rgba(200,255,140,.7)"/>
+          <circle class="dampf d3" cx="481" cy="7"  r="10" fill="rgba(234,255,195,.65)"/>
+          <circle class="dampf d4" cx="487" cy="5"  r="7"  fill="rgba(214,255,150,.75)"/>
+          <circle class="dampf d5" cx="484" cy="8"  r="9"  fill="rgba(228,255,185,.7)"/>
 
-          <!-- Heckflosse mit Positionslicht -->
-          <path d="M118 46 L142 15 Q146 9 154 13 L142 47 Z"
-                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="1.6"/>
-          <circle class="blink" cx="151" cy="13" r="3.8" fill="#D6FF8C"/>
-
-          <!-- Cockpit-Kanzel mit wandernder Reflexion -->
-          <path d="M330 46 C382 42 442 52 482 68 L450 78 C414 60 366 54 332 56 Z"
-                fill="url(#zglas)" stroke="rgba(200,255,110,.8)" stroke-width="1.5"/>
-          <g clip-path="url(#zkanzel)">
-            <rect class="reflex" x="-70" y="34" width="40" height="52"
-                  fill="rgba(234,255,190,.4)" transform="skewX(-24)"/>
+          <!-- Treibraeder mit Speichen und Kurbelzapfen -->
+          <g class="rad">
+            <circle cx="240" cy="140" r="26" fill="#0A1008" stroke="#A8FF00" stroke-width="2.5"/>
+            <circle cx="240" cy="140" r="19" fill="none" stroke="rgba(168,255,0,.35)" stroke-width="1"/>
+            <path d="M240 116 L240 164 M219.2 128 L260.8 152 M219.2 152 L260.8 128"
+                  stroke="rgba(168,255,0,.55)" stroke-width="2"/>
+            <circle cx="240" cy="140" r="5.5" fill="#0A1008" stroke="#A8FF00" stroke-width="1.6"/>
+            <circle cx="254" cy="140" r="4" fill="#D6FF8C"/>
+          </g>
+          <g class="rad">
+            <circle cx="310" cy="140" r="26" fill="#0A1008" stroke="#A8FF00" stroke-width="2.5"/>
+            <circle cx="310" cy="140" r="19" fill="none" stroke="rgba(168,255,0,.35)" stroke-width="1"/>
+            <path d="M310 116 L310 164 M289.2 128 L330.8 152 M289.2 152 L330.8 128"
+                  stroke="rgba(168,255,0,.55)" stroke-width="2"/>
+            <circle cx="310" cy="140" r="5.5" fill="#0A1008" stroke="#A8FF00" stroke-width="1.6"/>
+            <circle cx="324" cy="140" r="4" fill="#D6FF8C"/>
+          </g>
+          <g class="rad">
+            <circle cx="380" cy="140" r="26" fill="#0A1008" stroke="#A8FF00" stroke-width="2.5"/>
+            <circle cx="380" cy="140" r="19" fill="none" stroke="rgba(168,255,0,.35)" stroke-width="1"/>
+            <path d="M380 116 L380 164 M359.2 128 L400.8 152 M359.2 152 L400.8 128"
+                  stroke="rgba(168,255,0,.55)" stroke-width="2"/>
+            <circle cx="380" cy="140" r="5.5" fill="#0A1008" stroke="#A8FF00" stroke-width="1.6"/>
+            <circle cx="394" cy="140" r="4" fill="#D6FF8C"/>
+          </g>
+          <!-- Treibstange: laeuft auf den Kurbelzapfen im Kreis -->
+          <g class="rodY"><g class="rodX">
+            <path d="M254 140 L394 140" stroke="#A8FF00" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="254" cy="140" r="3" fill="#EAFFC0"/>
+            <circle cx="324" cy="140" r="3" fill="#EAFFC0"/>
+            <circle cx="394" cy="140" r="3" fill="#EAFFC0"/>
+          </g></g>
+          <!-- Laufraeder -->
+          <g class="radS">
+            <circle cx="470" cy="153" r="13" fill="#0A1008" stroke="#A8FF00" stroke-width="2"/>
+            <path d="M470 142 L470 164 M459 153 L481 153" stroke="rgba(168,255,0,.5)" stroke-width="1.6"/>
+            <circle cx="470" cy="153" r="3" fill="#D6FF8C"/>
+          </g>
+          <g class="radS">
+            <circle cx="508" cy="153" r="13" fill="#0A1008" stroke="#A8FF00" stroke-width="2"/>
+            <path d="M508 142 L508 164 M497 153 L519 153" stroke="rgba(168,255,0,.5)" stroke-width="1.6"/>
+            <circle cx="508" cy="153" r="3" fill="#D6FF8C"/>
+          </g>
+          <g class="radS">
+            <circle cx="108" cy="153" r="13" fill="#0A1008" stroke="#A8FF00" stroke-width="2"/>
+            <path d="M108 142 L108 164 M97 153 L119 153" stroke="rgba(168,255,0,.5)" stroke-width="1.6"/>
+            <circle cx="108" cy="153" r="3" fill="#D6FF8C"/>
           </g>
 
-          <!-- Fensterband hinten -->
-          <path d="M100 62 L306 51 L308 68 L102 79 Z" fill="rgba(214,255,140,.13)"
-                stroke="rgba(168,255,0,.45)" stroke-width="1"/>
-          <path d="M148 59 L149 76 M197 57 L198 74 M246 54 L247 71" stroke="rgba(168,255,0,.5)" stroke-width="1.6"/>
+          <!-- Rahmen mit Umlaufblech -->
+          <path d="M62 118 L582 118 L582 128 L62 128 Z"
+                fill="#0A1008" stroke="rgba(168,255,0,.5)" stroke-width="1.2"/>
 
-          <!-- Blendenfugen -->
-          <path d="M322 44 C320 74 320 100 322 127 M470 60 C468 84 468 104 470 122"
-                fill="none" stroke="rgba(168,255,0,.15)" stroke-width="1.2"/>
+          <!-- Kuhfaenger -->
+          <path d="M570 102 L636 167 L570 148 Z"
+                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="1.8"/>
+          <path d="M584 118 L598 152 M598 130 L612 158" stroke="rgba(168,255,0,.5)" stroke-width="1.4"/>
 
-          <!-- Neon-Bauchlinie: breiter Schein + heller Kern -->
-          <path d="M70 108 C220 120 420 117 544 99" fill="none"
-                stroke="rgba(168,255,0,.28)" stroke-width="8" stroke-linecap="round"/>
-          <path d="M70 108 C220 120 420 117 544 99" fill="none"
-                stroke="#E4FFB0" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- Kessel -->
+          <rect x="170" y="52" width="372" height="66" rx="33"
+                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="2"/>
+          <path d="M232 54 C230 76 230 96 232 116 M296 53 C294 76 294 96 296 117 M424 53 C422 76 422 96 424 117"
+                fill="none" stroke="rgba(168,255,0,.18)" stroke-width="1.2"/>
+          <path d="M205 50 C320 43 440 43 522 53" fill="none"
+                stroke="url(#zrim)" stroke-width="2.4" stroke-linecap="round"/>
 
-          <!-- Scheinwerfer -->
-          <circle cx="552" cy="94" r="9" fill="rgba(214,255,140,.3)"/>
-          <circle cx="552" cy="94" r="4.5" fill="#F2FFD8"/>
+          <!-- Rauchkammertuer -->
+          <circle cx="520" cy="85" r="25" fill="#0A1008" stroke="#A8FF00" stroke-width="1.8"/>
+          <circle cx="520" cy="85" r="10" fill="none" stroke="rgba(168,255,0,.5)" stroke-width="1.2"/>
+          <circle cx="520" cy="85" r="3" fill="#D6FF8C"/>
 
-          <!-- Magnetkufen -->
-          <rect class="magpad"   x="128" y="134" width="104" height="7" rx="3.5" fill="#A8FF00"/>
-          <rect class="magpad b" x="330" y="134" width="104" height="7" rx="3.5" fill="#A8FF00"/>
+          <!-- Scheinwerfer auf der Rauchkammer -->
+          <circle cx="549" cy="63" r="8" fill="rgba(214,255,140,.3)"/>
+          <circle cx="549" cy="63" r="4" fill="#F2FFD8"/>
+
+          <!-- Schornstein -->
+          <path d="M472 52 L472 26 L466 22 L466 12 L504 12 L504 22 L498 26 L498 52 Z"
+                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="1.8"/>
+
+          <!-- Dampfdom, Sanddom und Pfeife -->
+          <path d="M368 52 Q390 26 412 52 Z" fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="1.8"/>
+          <path d="M284 52 Q300 32 316 52 Z" fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="1.6"/>
+          <path d="M345 52 L345 40" stroke="#A8FF00" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="345" cy="37" r="4" fill="#0A1008" stroke="#A8FF00" stroke-width="1.4"/>
+
+          <!-- Fuehrerhaus -->
+          <path d="M64 118 L64 42 Q64 34 72 34 L146 34 L146 52 L176 52 L176 118 Z"
+                fill="url(#zrumpf)" stroke="#A8FF00" stroke-width="2"/>
+          <path d="M56 34 L154 34 L154 27 Q154 24 150 24 L60 24 Q56 24 56 27 Z"
+                fill="#0A1008" stroke="#A8FF00" stroke-width="1.6"/>
+          <circle class="blink" cx="146" cy="19" r="3.6" fill="#D6FF8C"/>
+          <rect x="82" y="48" width="48" height="34" rx="3"
+                fill="url(#zglas)" stroke="rgba(200,255,110,.8)" stroke-width="1.4"/>
+          <g clip-path="url(#zfenster)">
+            <rect class="reflex" x="70" y="42" width="14" height="46"
+                  fill="rgba(234,255,190,.4)" transform="skewX(-18)"/>
+          </g>
+
+          <!-- Feuerbuechse glimmt -->
+          <g class="feuer">
+            <rect x="118" y="121" width="46" height="11" rx="4" fill="url(#zfeuer)"/>
+            <ellipse cx="141" cy="140" rx="27" ry="7" fill="rgba(255,140,30,.3)"/>
+          </g>
 
           <!-- Kupplung hinten -->
-          <path d="M22 94 L6 94" stroke="#A8FF00" stroke-width="6" stroke-linecap="round"/>
-          <circle cx="7" cy="94" r="5.5" fill="#D6FF8C"/>
+          <path d="M64 98 L46 98" stroke="#A8FF00" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="47" cy="98" r="5.5" fill="#D6FF8C"/>
 
-          <text x="126" y="104" font-family="Consolas,monospace" font-size="17"
-                letter-spacing="8" fill="rgba(210,255,110,.95)">BKWI EXPRESS</text>
+          <text x="196" y="93" font-family="Consolas,monospace" font-size="15"
+                letter-spacing="5.5" fill="rgba(210,255,110,.95)">BKWI EXPRESS</text>
         </svg>
       </div>
       <div class="burst" id="burst" aria-hidden="true"><span class="blitzring"></span></div>
