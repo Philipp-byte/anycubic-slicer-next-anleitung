@@ -3,2067 +3,633 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Anycubic Slicer Next – Schülerhandbuch | Kolping Bildung BKWI</title>
+<title>Enter BKWI &middot; Anycubic Slicer Next</title>
+<meta name="description" content="Interaktives Schülerhandbuch zum Anycubic Slicer Next – Berufskolleg Wirtschaftsinformatik, Kolping Bildung.">
+<meta name="theme-color" content="#04070A">
+<link rel="prefetch" href="anleitung.html" as="document">
+<link rel="preload" href="bilder/bkwi-logo.webp" as="image" type="image/webp">
 <style>
 :root{
+  --neon:#A8FF00;
+  --neon-soft:#C9FF5C;
+  --neon-deep:#5AA300;
   --orange:#EE7203;
   --navy:#12415B;
-  --gruen:#8CA88A;
-  --hell:#E7EDF0;
-  --grau:#5B7B90;
-  --linie:#D6DEE3;
+  --bg:#04070A;
+  --bg-2:#080D12;
+  --ink:#E8F2E4;
+  --muted:#7F9490;
+  --mono:'Consolas','SF Mono',Menlo,'Courier New',monospace;
+  --sans:'Segoe UI',Frutiger,Arial,Helvetica,sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth; scroll-padding-top:96px}
+html,body{height:100%}
 body{
-  margin:0; background:#fff; color:#1a1a1a;
-  font-family:'Segoe UI', Frutiger, Arial, Helvetica, sans-serif;
-  font-size:17px; line-height:1.65;
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--sans);
+  overflow-x:hidden; overflow-y:auto;  /* Notausgang, falls der Bildschirm sehr flach ist */
+  -webkit-font-smoothing:antialiased;
+  scrollbar-width:none;
+}
+body::-webkit-scrollbar{width:0}
+
+/* ============ Hintergrund-Ebenen ============ */
+.scene{position:fixed; inset:0; overflow:hidden; z-index:0}
+
+/* Farbwolken */
+.blob{position:absolute; border-radius:50%; filter:blur(90px); opacity:.55; will-change:transform}
+.blob.b1{width:60vw; height:60vw; left:-12vw; top:-18vw;
+  background:radial-gradient(circle,rgba(168,255,0,.30),transparent 68%);
+  animation:drift1 26s ease-in-out infinite}
+.blob.b2{width:52vw; height:52vw; right:-14vw; bottom:-16vw;
+  background:radial-gradient(circle,rgba(18,65,91,.75),transparent 68%);
+  animation:drift2 32s ease-in-out infinite}
+.blob.b3{width:34vw; height:34vw; right:12vw; top:-8vw;
+  background:radial-gradient(circle,rgba(238,114,3,.20),transparent 70%);
+  animation:drift3 38s ease-in-out infinite}
+@keyframes drift1{50%{transform:translate3d(8vw,6vh,0) scale(1.12)}}
+@keyframes drift2{50%{transform:translate3d(-7vw,-5vh,0) scale(1.16)}}
+@keyframes drift3{50%{transform:translate3d(-5vw,8vh,0) scale(.9)}}
+
+/* Perspektivisches Raster ("Druckbett") */
+.floor{
+  position:absolute; left:50%; bottom:-6vh; width:340vw; height:130vh;
+  transform:translateX(-50%) perspective(400px) rotateX(74deg);
+  transform-origin:50% 100%;
+  background-image:
+    linear-gradient(rgba(168,255,0,.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168,255,0,.16) 1px, transparent 1px);
+  background-size:74px 74px;
+  animation:floorRun 2.6s linear infinite;
+  -webkit-mask-image:linear-gradient(to top,#000 4%,rgba(0,0,0,.35) 42%,transparent 78%);
+          mask-image:linear-gradient(to top,#000 4%,rgba(0,0,0,.35) 42%,transparent 78%);
+  opacity:.75;
+}
+@keyframes floorRun{to{background-position:0 74px, 0 0}}
+body.launch .floor{animation-duration:.28s}
+
+/* Horizontlinie */
+.horizon{
+  position:absolute; left:0; right:0; bottom:28vh; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,255,0,.75),transparent);
+  box-shadow:0 0 26px 3px rgba(168,255,0,.35);
 }
 
-/* ---------- Kopfleiste mit Logo oben rechts ---------- */
-header.top{
-  position:sticky; top:0; z-index:100; background:#fff;
-  border-bottom:3px solid var(--navy);
+/* Partikel */
+#fx{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+/* Scanlines + Vignette + Korn */
+.scan{position:absolute; inset:0; pointer-events:none; opacity:.30;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.045) 0 1px,transparent 1px 3px);
+  animation:scanRoll 8s linear infinite}
+@keyframes scanRoll{to{background-position:0 300px}}
+.vignette{position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%,transparent 38%,rgba(0,0,0,.72) 100%)}
+
+/* ============ Kopfleiste ============ */
+.topbar{
+  position:fixed; z-index:5; top:0; left:0; right:0;
   display:flex; align-items:center; justify-content:space-between;
-  padding:10px 28px; gap:24px;
+  padding:20px clamp(18px,4vw,42px); gap:16px;
+  animation:fadeDown .9s .15s both;
 }
-header.top .titelzeile{min-width:0}
-header.top .eyebrow{
-  font-size:12px; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--orange); font-weight:700;
+.brandmark{display:flex; align-items:center; gap:14px; min-width:0}
+.brandmark img{height:30px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.82}
+.brandmark .sep{width:1px; height:22px; background:rgba(255,255,255,.18)}
+.brandmark .kicker{
+  font:600 11px/1.3 var(--mono); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--muted); white-space:nowrap;
 }
-header.top h1{
-  margin:1px 0 0; font-size:20px; color:var(--navy); font-weight:700;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+.tools{display:flex; align-items:center; gap:10px}
+.iconbtn{
+  width:40px; height:40px; display:grid; place-items:center; cursor:pointer;
+  background:rgba(255,255,255,.04); border:1px solid rgba(168,255,0,.22);
+  border-radius:11px; color:var(--neon); transition:.22s;
 }
-header.top img{height:38px; width:auto; display:block}
+.iconbtn:hover{background:rgba(168,255,0,.12); border-color:var(--neon); transform:translateY(-2px)}
+.iconbtn svg{width:19px; height:19px; fill:currentColor}
+.iconbtn .off{display:none}
+.iconbtn.muted{color:var(--muted); border-color:rgba(255,255,255,.16)}
+.iconbtn.muted .on{display:none}
+.iconbtn.muted .off{display:block}
 
-/* ---------- Suchleiste ---------- */
-.suche{position:relative; flex:0 1 340px; margin-left:auto; margin-right:20px}
-.suche input{
-  width:100%; padding:9px 34px 9px 36px; font:inherit; font-size:15px;
-  border:1.5px solid var(--linie); border-radius:22px; color:var(--navy);
-  background:#fff; outline:none;
+/* ============ Bühne ============ */
+.stage{
+  position:relative; z-index:4; min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:82px clamp(18px,5vw,40px) 56px;
+  transition:transform .55s cubic-bezier(.6,0,.9,.4), opacity .5s ease;
 }
-.suche input:focus{border-color:var(--orange); box-shadow:0 0 0 3px rgba(238,114,3,.15)}
-.suche input::placeholder{color:#8fa3ae}
-.suche .lupe{
-  position:absolute; left:13px; top:50%; transform:translateY(-50%);
-  width:15px; height:15px; border:2px solid var(--grau); border-radius:50%;
-  pointer-events:none;
-}
-.suche .lupe::after{
-  content:''; position:absolute; right:-6px; bottom:-4px; width:7px; height:2px;
-  background:var(--grau); transform:rotate(45deg);
-}
-.suche .leeren{
-  position:absolute; right:12px; top:50%; transform:translateY(-50%);
-  border:none; background:none; color:var(--grau); font-size:19px;
-  cursor:pointer; line-height:1; padding:0; display:none;
-}
-.treffer{
-  position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:200;
-  background:#fff; border:1px solid var(--linie); border-radius:8px;
-  box-shadow:0 12px 32px rgba(18,65,91,.18);
-  max-height:min(62vh,520px); overflow-y:auto; display:none;
-}
-.treffer.offen{display:block}
-.treffer .kopfzeile{
-  padding:8px 16px; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--grau); border-bottom:1px solid var(--linie); background:#F7F9FA;
-  position:sticky; top:0;
-}
-.treffer button.t{
-  display:block; width:100%; text-align:left; border:none; background:none;
-  padding:10px 16px; cursor:pointer; border-bottom:1px solid #EEF2F4;
-  font:inherit; color:#1a1a1a;
-}
-.treffer button.t:last-child{border-bottom:none}
-.treffer button.t:hover, .treffer button.t.aktiv{background:var(--hell)}
-.treffer .kap{
-  display:block; font-size:12px; color:var(--orange); font-weight:700;
-  letter-spacing:.04em; margin-bottom:2px;
-}
-.treffer .txt{display:block; font-size:14.5px; line-height:1.45; color:var(--navy)}
-.treffer .txt mark{background:#FCE0C2; color:var(--navy); padding:0 2px; border-radius:2px}
-.treffer .nix{padding:18px 16px; font-size:14.5px; color:var(--grau)}
-@keyframes fundBlink{
-  0%,100%{background:transparent}
-  15%,60%{background:#FCE0C2}
-}
-.fundstelle{animation:fundBlink 2.4s ease-out 1; border-radius:4px}
+body.launch .stage{transform:scale(1.22); opacity:0}
 
-/* ---------- Layout ---------- */
-.wrap{display:grid; grid-template-columns:290px minmax(0,1fr); gap:44px;
-      max-width:1360px; margin:0 auto; padding:0 28px 90px}
-nav.toc{
-  position:sticky; top:96px; align-self:start; max-height:calc(100vh - 120px);
-  overflow-y:auto; padding:26px 0 26px 0; font-size:15px;
+/* Eyebrow */
+.eyebrow{
+  display:inline-flex; align-items:center; gap:10px;
+  font:600 11px/1 var(--mono); letter-spacing:.26em; text-transform:uppercase;
+  color:var(--neon-soft); padding:8px 16px; border-radius:999px;
+  background:rgba(168,255,0,.07); border:1px solid rgba(168,255,0,.28);
+  margin-bottom:clamp(14px,3vh,30px);
+  animation:fadeUp .8s .3s both;
 }
-nav.toc .tocTitel{
-  font-size:12px; letter-spacing:.12em; text-transform:uppercase;
-  color:var(--grau); font-weight:700; margin-bottom:10px;
-}
-nav.toc a{
-  display:block; padding:6px 12px; color:var(--navy); text-decoration:none;
-  border-left:3px solid transparent; border-radius:0 4px 4px 0;
-}
-nav.toc a:hover{background:var(--hell); border-left-color:var(--orange)}
-nav.toc a.teil{margin-top:16px; font-weight:700; font-size:13px;
-  letter-spacing:.08em; text-transform:uppercase; color:var(--grau);
-  pointer-events:none}
-main{padding-top:26px; min-width:0}
+.dot{width:7px; height:7px; border-radius:50%; background:var(--neon);
+  box-shadow:0 0 10px var(--neon); animation:blip 1.9s ease-in-out infinite}
+@keyframes blip{50%{opacity:.25; box-shadow:0 0 3px var(--neon)}}
 
-/* ---------- Titelblock ---------- */
-.titelblock{
-  background:var(--navy); color:#fff; border-radius:8px;
-  padding:38px 42px; margin:8px 0 44px;
+/* ---- Logo ---- */
+.logowrap{
+  position:relative; width:min(520px,74vw,46vh);
+  margin:0 auto; perspective:1100px; cursor:pointer;
+  animation:logoIn 1.5s cubic-bezier(.16,1,.3,1) .1s both;
 }
-.titelblock h2{margin:0 0 10px; font-size:34px; line-height:1.2; color:#fff}
-.titelblock p{margin:0; max-width:70ch; color:#dfe8ee; font-size:17px}
-.titelblock .balken{height:5px; width:88px; background:var(--orange);
-  border-radius:3px; margin-bottom:22px}
-.meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:24px}
-.meta span{
-  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
-  padding:5px 13px; border-radius:20px; font-size:13.5px; color:#fff;
+/* Neon-Aura hinter dem Logo */
+.logowrap::before{
+  content:''; position:absolute; left:50%; top:50%; translate:-50% -50%;
+  width:78%; height:62%; border-radius:50%; z-index:-1;
+  background:radial-gradient(ellipse,rgba(168,255,0,.42),rgba(168,255,0,.10) 55%,transparent 72%);
+  filter:blur(34px); animation:pulseGlow 3.8s ease-in-out infinite;
 }
+/* Lichtschein als Standfläche */
+.logowrap::after{
+  content:''; position:absolute; left:50%; bottom:4%; translate:-50% 0;
+  width:58%; height:14px; border-radius:50%;
+  background:radial-gradient(ellipse,rgba(168,255,0,.6),transparent 70%);
+  filter:blur(10px); animation:pulseGlow 3.8s ease-in-out infinite;
+}
+@keyframes pulseGlow{50%{opacity:.5; scale:.88}}
 
-/* ---------- Überschriften ---------- */
-h3{
-  color:var(--navy); font-size:25px; margin:56px 0 6px; line-height:1.25;
-  padding-top:14px; border-top:1px solid var(--linie);
+.logo3d{
+  position:relative;
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .35s cubic-bezier(.16,1,.3,1);
+  animation:hover3d 7s ease-in-out infinite;
 }
-h3 .nr{
-  display:inline-block; background:var(--orange); color:#fff;
-  font-size:14px; font-weight:700; border-radius:4px;
-  padding:3px 10px; margin-right:12px; vertical-align:middle;
-  position:relative; top:-3px;
+.logo3d img{
+  display:block; width:100%; height:auto;
+  filter:drop-shadow(0 0 28px rgba(168,255,0,.45)) drop-shadow(0 18px 34px rgba(0,0,0,.7));
+  animation:glitch 8s steps(1,end) infinite;
 }
-h4{color:var(--navy); font-size:19px; margin:32px 0 6px}
-h5{color:var(--navy); font-size:16px; margin:22px 0 4px}
-p{margin:10px 0}
-.lead{font-size:18px; color:var(--navy)}
-strong{color:var(--navy)}
-ul,ol{margin:10px 0 10px 0; padding-left:24px}
-li{margin:6px 0}
-code{
-  background:var(--hell); color:var(--navy); padding:1px 6px;
-  border-radius:3px; font-family:Consolas,'Courier New',monospace; font-size:.92em;
+@keyframes glitch{
+  0%,91.5%,100%{transform:none; filter:drop-shadow(0 0 28px rgba(168,255,0,.45)) drop-shadow(0 18px 34px rgba(0,0,0,.7))}
+  92%  {transform:translate(-6px,2px) skewX(2deg); filter:drop-shadow(6px 0 0 rgba(255,0,90,.65)) drop-shadow(-6px 0 0 rgba(0,220,255,.55))}
+  93.2%{transform:none}
+  94%  {transform:translate(5px,-3px) skewX(-1.5deg); filter:drop-shadow(-5px 0 0 rgba(0,255,180,.6)) drop-shadow(5px 0 0 rgba(255,0,120,.5))}
+  95%  {transform:none}
+  96%  {transform:translate(-3px,1px); filter:saturate(2.4) brightness(1.25)}
+  97%  {transform:none}
 }
-kbd{
-  background:#fff; border:1px solid var(--grau); border-bottom-width:2px;
-  border-radius:4px; padding:1px 7px; font-size:.85em; font-family:inherit;
-  color:var(--navy); font-weight:600;
+@keyframes hover3d{50%{translate:0 -14px}}
+.logowrap:hover .logo3d img{filter:drop-shadow(0 0 44px rgba(168,255,0,.75)) drop-shadow(0 18px 34px rgba(0,0,0,.7))}
+
+/* ---- Titel ---- */
+h1{
+  margin:clamp(10px,2.4vh,26px) 0 10px;
+  font-size:clamp(23px,3.6vw,42px); line-height:1.1;
+  font-weight:800; letter-spacing:.01em; color:#fff;
+  text-shadow:0 0 42px rgba(168,255,0,.28);
+  animation:fadeUp .85s .5s both;
+}
+h1 .thin{display:block; font-size:.5em; font-weight:600; letter-spacing:.3em;
+  color:var(--neon); text-transform:uppercase; margin-bottom:.6em; text-shadow:none}
+.claim{
+  margin:0 auto; max-width:60ch; color:#B7C7C0; font-size:clamp(14px,1.35vw,16.5px);
+  line-height:1.6; animation:fadeUp .85s .62s both;
 }
 
-/* ---------- Abbildungen ---------- */
-figure{margin:22px 0; }
-figure img{
-  max-width:100%; height:auto; display:block;
-  border:1px solid var(--linie); border-radius:6px;
+/* ---- Start-Button ---- */
+.cta{margin:clamp(18px,3.4vh,34px) 0 0; animation:fadeUp .85s .74s both}
+.start{
+  position:relative; display:inline-flex; align-items:center; gap:16px;
+  padding:18px 40px; border-radius:15px; cursor:pointer; overflow:hidden;
+  font:800 clamp(14px,1.7vw,18px)/1 var(--sans); letter-spacing:.16em;
+  text-transform:uppercase; text-decoration:none;
+  color:#06210A; background:linear-gradient(135deg,var(--neon),#7BD400);
+  border:1px solid rgba(168,255,0,.9);
+  box-shadow:0 0 0 0 rgba(168,255,0,.55), 0 14px 40px -8px rgba(168,255,0,.6);
+  transition:transform .2s cubic-bezier(.16,1,.3,1), box-shadow .25s;
+  animation:ctaPulse 2.8s ease-in-out infinite;
 }
-figcaption{
-  font-size:14px; color:var(--grau); margin-top:8px;
-  border-left:3px solid var(--orange); padding-left:11px;
+.start:hover{transform:translateY(-3px) scale(1.035);
+  box-shadow:0 0 0 6px rgba(168,255,0,.14), 0 22px 56px -10px rgba(168,255,0,.75)}
+.start:active{transform:translateY(-1px) scale(.99)}
+.start:focus-visible{outline:3px solid #fff; outline-offset:4px}
+.start .arrow{
+  display:inline-grid; place-items:center; width:26px; height:26px; border-radius:50%;
+  background:rgba(6,33,10,.16); transition:transform .25s
 }
-figcaption b{color:var(--navy)}
-figure.klein img{max-width:560px}
-figure.mini img{max-width:400px}
-
-/* ---------- Kästen ---------- */
-.box{border-radius:6px; padding:18px 22px; margin:22px 0;}
-.box p:first-child{margin-top:0}
-.box p:last-child, .box ul:last-child, .box ol:last-child{margin-bottom:0}
-.box .kopf{
-  font-weight:700; color:var(--navy); font-size:15px;
-  letter-spacing:.04em; text-transform:uppercase; margin-bottom:6px;
+.start:hover .arrow{transform:translateX(5px)}
+.start .arrow svg{width:15px; height:15px; fill:currentColor}
+/* Sweep */
+.start::before{
+  content:''; position:absolute; top:0; left:-60%; width:45%; height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);
+  transform:skewX(-22deg); animation:sweep 3.6s ease-in-out infinite;
 }
-.info{background:var(--hell); border-left:5px solid var(--navy)}
-.tipp{background:#FDF1E6; border-left:5px solid var(--orange)}
-.merk{background:#fff; border:1px solid var(--linie); border-left:5px solid var(--navy)}
-.achtung{background:#FDF1E6; border:1px solid #F2C79B; border-left:5px solid var(--orange)}
-.gut{background:#F1F5F0; border-left:5px solid var(--gruen)}
-
-/* ---------- Fachbegriff-Tabelle ---------- */
-table{border-collapse:collapse; width:100%; margin:20px 0; font-size:15.5px}
-th{background:var(--navy); color:#fff; text-align:left; padding:10px 14px;
-   font-weight:600; font-size:14.5px}
-td{padding:10px 14px; border-bottom:1px solid var(--linie); vertical-align:top}
-tbody tr:nth-child(even){background:#F7F9FA}
-td.begriff{font-weight:700; color:var(--navy); white-space:nowrap}
-
-/* ---------- Schritt-Karten ---------- */
-.schritte{counter-reset:s; margin:22px 0; padding:0; list-style:none}
-.schritte>li{
-  counter-increment:s; position:relative; padding:2px 0 14px 46px; margin:0;
+@keyframes sweep{0%{left:-60%}55%,100%{left:135%}}
+@keyframes ctaPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(168,255,0,.5), 0 14px 40px -8px rgba(168,255,0,.55)}
+  50%{box-shadow:0 0 0 12px rgba(168,255,0,0), 0 14px 40px -8px rgba(168,255,0,.55)}
 }
-.schritte>li::before{
-  content:counter(s); position:absolute; left:0; top:1px;
-  width:30px; height:30px; border-radius:50%; background:var(--orange);
-  color:#fff; font-weight:700; font-size:15px;
-  display:flex; align-items:center; justify-content:center;
+.hint{
+  margin:16px 0 0; font:500 12px/1.5 var(--mono); letter-spacing:.14em;
+  color:var(--muted); text-transform:uppercase; animation:fadeUp .8s .86s both;
 }
-.schritte>li::after{
-  content:''; position:absolute; left:14px; top:34px; bottom:0; width:2px;
-  background:var(--linie);
-}
-.schritte>li:last-child::after{display:none}
-
-/* ---------- Checkliste ---------- */
-.checkliste{
-  list-style:none; padding:0; margin:16px 0;
-  border:1px solid var(--linie); border-radius:6px; overflow:hidden;
-}
-.checkliste li{
-  margin:0; padding:11px 18px; border-bottom:1px solid var(--linie);
-  display:flex; align-items:flex-start; gap:12px;
-}
-.checkliste li:last-child{border-bottom:none}
-.checkliste li:hover{background:#F7F9FA}
-.checkliste input[type=checkbox]{
-  width:19px; height:19px; margin-top:3px; accent-color:var(--orange);
-  flex:none; cursor:pointer;
-}
-.checkliste label{cursor:pointer}
-.checkliste .zusatz{display:block; font-size:14px; color:var(--grau)}
-
-/* ---------- Aufgaben ---------- */
-.aufgabe{
-  border:1px solid var(--linie); border-radius:6px; margin:26px 0;
-  overflow:hidden; background:#fff;
-}
-.aufgabe .titel{
-  background:var(--navy); color:#fff; padding:10px 20px;
-  font-weight:700; font-size:16px;
-}
-.aufgabe .titel .label{
-  background:var(--orange); color:#fff; border-radius:3px;
-  padding:2px 9px; font-size:13px; margin-right:10px;
-}
-.aufgabe .inhalt{padding:16px 22px}
-.aufgabe details{
-  margin-top:14px; border-top:1px dashed var(--linie); padding-top:12px;
-}
-.aufgabe summary{
-  cursor:pointer; color:var(--orange); font-weight:600; font-size:15px;
-  list-style:none; user-select:none;
-}
-.aufgabe summary::-webkit-details-marker{display:none}
-.aufgabe summary::before{content:'▸ '; }
-.aufgabe details[open] summary::before{content:'▾ '}
-.aufgabe details .loesung{
-  background:#F1F5F0; border-left:4px solid var(--gruen);
-  padding:12px 16px; margin-top:10px; border-radius:0 4px 4px 0;
+.hint kbd{
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2);
+  border-bottom-width:2px; border-radius:5px; padding:2px 8px; color:var(--neon-soft);
+  font:inherit; font-size:11px;
 }
 
-/* ---------- Videokasten ---------- */
-.video{
-  border:1px solid var(--linie); border-radius:6px; overflow:hidden; margin:24px 0;
+/* ---- Kennzahlen ---- */
+.stats{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:clamp(16px,3.4vw,48px); margin-top:clamp(20px,3.6vh,38px);
+  animation:fadeUp .9s .96s both;
 }
-.video .kopf{
-  background:var(--hell); padding:9px 18px; font-size:14px; font-weight:700;
-  color:var(--navy); letter-spacing:.04em; text-transform:uppercase;
-  border-bottom:1px solid var(--linie);
-}
-.video .kopf .punkt{
-  display:inline-block; width:9px; height:9px; border-radius:50%;
-  background:var(--orange); margin-right:9px;
-}
-.video img{width:100%; height:auto; display:block}
-.video .bu{padding:10px 18px; font-size:14px; color:var(--grau)}
+.stat{min-width:76px}
+.stat b{display:block; font-size:clamp(22px,3.4vw,34px); font-weight:800; color:var(--neon);
+  line-height:1; text-shadow:0 0 22px rgba(168,255,0,.45); font-variant-numeric:tabular-nums}
+.stat span{display:block; margin-top:7px; font:600 10.5px/1.3 var(--mono);
+  letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
 
-/* ---------- Fußzeile ---------- */
-footer{
-  border-top:1px solid var(--linie); margin-top:60px; padding:16px 28px;
-  display:flex; justify-content:space-between; font-size:13px; color:var(--navy);
-  max-width:1360px; margin-left:auto; margin-right:auto;
+/* ---- Lernbereiche ---- */
+.chips{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:9px;
+  margin-top:clamp(18px,3vh,30px); max-width:820px;
+  animation:fadeUp .9s 1.06s both;
+}
+.chip{
+  font:600 11.5px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase;
+  color:#9FB3AC; padding:9px 15px; border-radius:999px;
+  background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.11);
+  transition:.25s; cursor:default;
+}
+.chip:hover{color:var(--neon); border-color:rgba(168,255,0,.5);
+  background:rgba(168,255,0,.08); transform:translateY(-2px)}
+
+/* ---- Fußzeile ---- */
+.foot{
+  position:fixed; z-index:5; left:0; right:0; bottom:0;
+  display:flex; justify-content:space-between; align-items:center; gap:14px;
+  padding:16px clamp(18px,4vw,42px);
+  font:500 10.5px/1.4 var(--mono); letter-spacing:.14em; text-transform:uppercase;
+  color:#5E706B; animation:fadeUp .9s 1.2s both;
+}
+.foot a{color:#8AA096; text-decoration:none; border-bottom:1px solid transparent}
+.foot a:hover{color:var(--neon); border-bottom-color:var(--neon)}
+
+/* ---- Start-Blitz ---- */
+.flash{
+  position:fixed; inset:0; z-index:20; pointer-events:none; opacity:0;
+  background:radial-gradient(circle at 50% 50%,#fff,var(--neon) 32%,rgba(168,255,0,0) 72%);
+}
+body.launch .flash{animation:flashOut .62s ease-out forwards}
+@keyframes flashOut{0%{opacity:0}32%{opacity:1}100%{opacity:.94}}
+
+/* ---- Keyframes allgemein ---- */
+@keyframes fadeUp{from{opacity:0; transform:translateY(26px)}to{opacity:1; transform:none}}
+@keyframes fadeDown{from{opacity:0; transform:translateY(-18px)}to{opacity:1; transform:none}}
+@keyframes logoIn{
+  from{opacity:0; transform:translateY(50px) scale(.86); filter:blur(14px)}
+  to{opacity:1; transform:none; filter:blur(0)}
 }
 
-/* ---------- Druck ---------- */
-@media print{
-  header.top{position:static}
-  nav.toc{display:none}
-  .suche{display:none}
-  .fundstelle{animation:none}
-  .wrap{display:block; padding:0}
-  h3{page-break-after:avoid; break-after:avoid}
-  figure, .box, .aufgabe, .video{page-break-inside:avoid; break-inside:avoid}
-  body{font-size:11pt}
-  .titelblock{background:#fff!important; color:var(--navy)!important;
-              border:2px solid var(--navy)}
-  .titelblock h2,.titelblock p{color:var(--navy)!important}
-  .meta span{border-color:var(--navy); color:var(--navy)}
+/* ---- Flache Bildschirme: Inhalt stufenweise verdichten ---- */
+@media (max-height:980px){
+  .chips{display:none}
 }
-@media (max-width:1150px){
-  header.top{flex-wrap:wrap}
-  .suche{flex:1 1 100%; order:3; margin:8px 0 2px}
+@media (max-height:820px){
+  .logowrap{width:min(520px,74vw,40vh)}
+  .claim{display:none}
 }
-@media (max-width:980px){
-  .wrap{grid-template-columns:1fr; gap:0}
-  nav.toc{position:static; max-height:none; border-bottom:1px solid var(--linie)}
+@media (max-height:680px){
+  .logowrap{width:min(520px,60vw,34vh)}
+  .eyebrow{margin-bottom:8px}
+  .hint{display:none}
+  .stage{padding-top:70px}
+}
+@media (max-width:620px){
+  .brandmark .kicker{display:none}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:20px 12px; width:100%; max-width:340px}
+  .chips{display:none}
+  .foot .rechts{display:none}
+  .start{padding:17px 30px}
+  .claim{font-size:14.5px; max-width:38ch}
+}
+/* Touch-Geräte haben keine Enter-Taste */
+@media (hover:none){
+  .hint{display:none}
+}
+
+/* ---- Bewegung reduzieren ---- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+  .floor,#fx,.scan{display:none}
 }
 </style>
 </head>
 <body>
 
-<header class="top">
-  <div class="titelzeile">
-    <div class="eyebrow">Berufskolleg Wirtschaftsinformatik &middot; BKWI</div>
-    <h1>Anycubic Slicer Next &ndash; Bedienung Schritt für Schritt</h1>
-  </div>
+<!-- ============ Hintergrund ============ -->
+<div class="scene" aria-hidden="true">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="floor"></div>
+  <div class="horizon"></div>
+  <canvas id="fx"></canvas>
+  <div class="scan"></div>
+  <div class="vignette"></div>
+</div>
+<div class="flash" aria-hidden="true"></div>
 
-  <div class="suche">
-    <span class="lupe"></span>
-    <input type="search" id="sucheFeld" autocomplete="off" spellcheck="false"
-           placeholder="Begriff suchen, z. B. Infill, Brim, Schichthöhe …"
-           aria-label="Anleitung durchsuchen">
-    <button class="leeren" id="sucheLeeren" aria-label="Suche leeren">&times;</button>
-    <div class="treffer" id="trefferListe" role="listbox"></div>
+<!-- ============ Kopfleiste ============ -->
+<header class="topbar">
+  <div class="brandmark">
+    <img src="bilder/kolping-bildung-logo.png" alt="Kolping Bildung">
+    <span class="sep" aria-hidden="true"></span>
+    <span class="kicker">Berufskolleg Wirtschaftsinformatik</span>
   </div>
-
-  <img src="bilder/kolping-bildung-logo.png" alt="Kolping Bildung">
+  <div class="tools">
+    <button class="iconbtn" id="soundBtn" type="button"
+            aria-pressed="true" aria-label="Sound ein- oder ausschalten" title="Sound an/aus">
+      <svg class="on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 2v2a8 8 0 0 1 0 16v2a10 10 0 0 0 0-20z"/></svg>
+      <svg class="off" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm18.6-1.6-1.4-1.4L17 9.2 13.8 6l-1.4 1.4 3.2 3.2-3.2 3.2 1.4 1.4 3.2-3.2 3.2 3.2 1.4-1.4-3.2-3.2 3.2-3.2z"/></svg>
+    </button>
+  </div>
 </header>
 
-<div class="wrap">
+<!-- ============ Bühne ============ -->
+<main class="stage">
 
-<nav class="toc">
-  <div class="tocTitel">Inhalt</div>
-  <a class="teil">Grundlagen</a>
-  <a href="#g1">1 &nbsp;Was macht ein Slicer?</a>
-  <a href="#g2">2 &nbsp;Programm starten</a>
-  <a href="#g3">3 &nbsp;Die Oberfläche</a>
-  <a class="teil">Der Arbeitsablauf</a>
-  <a href="#s1">4 &nbsp;Modell importieren</a>
-  <a href="#s2">5 &nbsp;Drucker prüfen</a>
-  <a href="#s3">6 &nbsp;Filament wählen</a>
-  <a href="#s4">7 &nbsp;Prozessprofil &amp; Schichthöhe</a>
-  <a href="#s5">8 &nbsp;Objekt ausrichten</a>
-  <a class="teil">Feineinstellungen</a>
-  <a href="#f1">9 &nbsp;Wände &amp; Schalen</a>
-  <a href="#f2">10 &nbsp;Füllung (Infill)</a>
-  <a href="#f3">11 &nbsp;Stützstrukturen</a>
-  <a href="#f4">12 &nbsp;Haftung: Saum &amp; Umrandung</a>
-  <a class="teil">Abschluss</a>
-  <a href="#a1">13 &nbsp;Slicen</a>
-  <a href="#a2">14 &nbsp;Vorschau auswerten</a>
-  <a href="#a3">15 &nbsp;G-Code exportieren</a>
-  <a class="teil">Drucker &amp; Gerät</a>
-  <a href="#a4">16 &nbsp;Werkbank</a>
-  <a href="#a5">17 &nbsp;Kalibrierung</a>
-  <a class="teil">Material</a>
-  <a href="#c1">18 &nbsp;Checklisten</a>
-  <a href="#c2">19 &nbsp;Aufgaben</a>
-  <a href="#c3">20 &nbsp;Typische Fehler</a>
-  <a href="#c4">21 &nbsp;Glossar</a>
-</nav>
+  <div class="eyebrow"><span class="dot"></span>Kolping Bildung &middot; 3D-Druck-Labor</div>
 
-<main>
-
-<div class="titelblock">
-  <div class="balken"></div>
-  <h2>Vom 3D-Modell zum Druckauftrag</h2>
-  <p>Diese Anleitung führt dich durch den kompletten Arbeitsablauf im Anycubic
-  Slicer Next – von der 3D-Datei bis zur fertigen Druckdatei. Alle Screenshots
-  stammen aus der Programmversion, die auf den Rechnern im Unterricht
-  installiert ist. Fachbegriffe werden dort erklärt, wo sie zum ersten Mal
-  vorkommen, und zusätzlich im Glossar am Ende gesammelt.</p>
-  <div class="meta">
-    <span>Drucker: Anycubic Kobra 3 · 0,4&nbsp;mm Düse</span>
-    <span>Beispielobjekt: Schlüsselanhänger BKWI</span>
-    <span>Bearbeitungszeit: ca. 45–90 Minuten</span>
+  <div class="logowrap" id="logowrap">
+    <div class="logo3d" id="logo3d">
+      <picture>
+        <source srcset="bilder/bkwi-logo.webp" type="image/webp">
+        <img src="bilder/bkwi-logo.png" alt="Enter BKWI" draggable="false" fetchpriority="high">
+      </picture>
+    </div>
   </div>
-</div>
 
-<div class="box info">
-  <div class="kopf">Was du am Ende können sollst</div>
-  <ul>
-    <li>eine 3D-Datei in den Slicer laden und auf dem Druckbett ausrichten</li>
-    <li>Drucker, Filament und Prozessprofil bewusst auswählen und die Wahl begründen</li>
-    <li>die wichtigsten Druckparameter (Schichthöhe, Wandanzahl, Füllung, Stützen, Haftung) erklären und einstellen</li>
-    <li>den Slicing-Vorgang starten und das Ergebnis in der Vorschau kontrollieren</li>
-    <li>ein Objekt gezielt vergrößern, verkleinern und einfärben – und erklären, was dabei mit Material und Druckzeit passiert</li>
-    <li>eine Druckdatei (G-Code) exportieren</li>
-  </ul>
-</div>
-
-<div class="box tipp">
-  <div class="kopf">So findest du schnell etwas</div>
-  <p>Oben rechts sitzt eine <b>Suchleiste</b>. Tippe einen Begriff ein –
-  etwa <code>Brim</code>, <code>Infill</code> oder <code>Schichthöhe</code> –
-  und du bekommst sofort alle Fundstellen mit Kapitelangabe. Ein Klick springt
-  direkt zur Stelle und hebt sie kurz hervor. Mit
-  <kbd>Strg</kbd>&nbsp;+&nbsp;<kbd>F</kbd> oder der Taste <kbd>/</kbd> landest
-  du direkt im Suchfeld, mit <kbd>↑</kbd>&nbsp;<kbd>↓</kbd> wählst du aus,
-  <kbd>Enter</kbd> springt hin.</p>
-</div>
-
-
-<!-- ==================== TEIL 1: GRUNDLAGEN ==================== -->
-
-<h3 id="g1"><span class="nr">1</span>Was macht ein Slicer eigentlich?</h3>
-
-<p class="lead">Ein 3D-Drucker kann mit einer 3D-Datei nichts anfangen. Er
-versteht nur eine einzige Sprache: <em>„Fahre den Druckkopf von hier nach dort
-und drücke dabei so viel Kunststoff heraus.“</em> Genau diese Übersetzung ist
-die Aufgabe des Slicers.</p>
-
-<p>Der englische Begriff <b>to slice</b> bedeutet <b>„in Scheiben schneiden“</b>.
-Das beschreibt die Kernaufgabe des Programms sehr genau: Es zerlegt dein
-3D-Modell waagerecht in viele hauchdünne Scheiben – die <b>Schichten</b>. Für
-jede einzelne Schicht berechnet der Slicer anschließend den exakten Weg des
-Druckkopfes.</p>
-
-<table>
-  <thead>
-    <tr><th style="width:26%">Fachbegriff</th><th>Bedeutung</th></tr>
-  </thead>
-  <tbody>
-    <tr><td class="begriff">Slicer</td>
-        <td>Programm, das ein 3D-Modell in Druckschichten zerlegt und daraus Steuerbefehle für den Drucker erzeugt. Der Anycubic Slicer Next ist ein solches Programm.</td></tr>
-    <tr><td class="begriff">STL-Datei</td>
-        <td>Das häufigste Austauschformat für 3D-Modelle. Die Oberfläche des Objekts wird dabei aus lauter kleinen Dreiecken zusammengesetzt (Standard Tessellation Language). Eine STL-Datei enthält <em>nur</em> die Form – keine Farbe, kein Material, keine Druckeinstellungen.</td></tr>
-    <tr><td class="begriff">3MF-Datei</td>
-        <td>Modernes Nachfolgeformat. Es speichert zusätzlich zur Form auch Einstellungen, Position auf dem Druckbett und Materialangaben. Ein <em>Projekt</em> im Slicer wird als 3MF gespeichert.</td></tr>
-    <tr><td class="begriff">G-Code</td>
-        <td>Die „Maschinensprache“ des Druckers: eine lange Liste einfacher Befehle (Fahre nach X/Y/Z, heize auf, fördere Filament). Das ist das Ergebnis des Slicens und die Datei, die tatsächlich auf den Drucker kommt.</td></tr>
-    <tr><td class="begriff">Filament</td>
-        <td>Der Kunststoffdraht auf der Rolle, meist 1,75&nbsp;mm dick. Er wird im Druckkopf geschmolzen und schichtweise abgelegt.</td></tr>
-    <tr><td class="begriff">Düse / Nozzle</td>
-        <td>Die Öffnung am Druckkopf, durch die der geschmolzene Kunststoff austritt. Ihr Durchmesser (hier <code>0,4&nbsp;mm</code>) bestimmt, wie fein gedruckt werden kann.</td></tr>
-    <tr><td class="begriff">FDM</td>
-        <td>Fused Deposition Modeling – das Druckverfahren „Schmelzschichtung“, bei dem Kunststoffdraht aufgeschmolzen und Schicht für Schicht abgelegt wird. Alle Drucker in unserer Werkstatt arbeiten so.</td></tr>
-  </tbody>
-</table>
-
-<div class="box merk">
-  <div class="kopf">Merksatz</div>
-  <p><b>3D-Modell → Slicer → G-Code → Drucker.</b> Der Slicer ist das
-  Bindeglied. Fehler, die hier entstehen, kann der Drucker nicht mehr
-  korrigieren – deshalb lohnt sich die sorgfältige Kontrolle in der Vorschau.</p>
-</div>
-
-
-<h3 id="g2"><span class="nr">2</span>Das Programm starten</h3>
-
-<p>Öffne den Slicer über das Startmenü. Suche dort nach
-<code>Anycubic Slicer Next</code>. Der erste Start dauert etwas länger, weil
-das Programm alle Drucker- und Materialprofile lädt.</p>
-
-<p>Nach dem Start siehst du die <b>Startseite</b>. Sie ist eine Art
-Schaltzentrale und noch nicht die eigentliche Arbeitsfläche.</p>
-
-<figure>
-  <img src="bilder/abb01_startseite.jpg" alt="Startseite des Anycubic Slicer Next mit den Kacheln Neues Projekt und Projekt öffnen sowie zuletzt geöffneten Dateien">
-  <figcaption><b>Abb. 1:</b> Startseite. Über <b>Neues Projekt</b> beginnst du
-  mit einem leeren Druckbett. <b>Projekt öffnen</b> lädt eine gespeicherte
-  <code>.3mf</code>-Datei mit allen Einstellungen zurück. Darunter listet
-  <b>Zuletzt geöffnet</b> deine letzten Arbeiten.</figcaption>
-</figure>
-
-<ul class="schritte">
-  <li>Klicke auf <b>Neues Projekt</b>, um mit einem leeren Druckbett zu starten.</li>
-  <li>Wechsle in den Reiter <b>Vorbereiten</b> in der oberen Menüleiste. Dort
-      findet die gesamte Einrichtung statt.</li>
-</ul>
-
-<div class="box tipp">
-  <div class="kopf">Tipp für den Unterricht</div>
-  <p>Speichere deine Arbeit regelmäßig als Projekt
-  (<kbd>Strg</kbd>&nbsp;+&nbsp;<kbd>S</kbd>). Nur so bleiben deine
-  Einstellungen erhalten. Ein exportierter G-Code lässt sich später
-  <em>nicht</em> mehr sinnvoll bearbeiten.</p>
-</div>
-
-
-<h3 id="g3"><span class="nr">3</span>Die Oberfläche kennenlernen</h3>
-
-<p>Der Reiter <b>Vorbereiten</b> ist deine Werkbank. Er gliedert sich in
-sechs Bereiche, die du dir einprägen solltest – alle weiteren Schritte
-verweisen auf diese Nummern.</p>
-
-<figure>
-  <img src="bilder/abb02_oberflaeche.jpg" alt="Oberfläche des Slicers mit sechs nummerierten Bereichen">
-  <figcaption><b>Abb. 2:</b> Die Arbeitsoberfläche im Reiter <b>Vorbereiten</b>
-  mit ihren sechs Funktionsbereichen.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:8%">Nr.</th><th style="width:26%">Bereich</th><th>Wofür er zuständig ist</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">1</td><td class="begriff">Drucker</td>
-        <td>Auswahl des Druckermodells und der Druckbett-Oberfläche. Muss zum Gerät passen, das du tatsächlich benutzt.</td></tr>
-    <tr><td class="begriff">2</td><td class="begriff">Filament</td>
-        <td>Welches Material liegt eingelegt bereit? Hier stellst du PLA, PETG, TPU usw. ein.</td></tr>
-    <tr><td class="begriff">3</td><td class="begriff">Prozess</td>
-        <td>Alle Druckparameter, gegliedert in Reiter: Qualität, Struktur, Geschwindigkeit, Stützen, Multimaterial, Sonstiges.</td></tr>
-    <tr><td class="begriff">4</td><td class="begriff">Werkzeugleiste</td>
-        <td>Werkzeuge zum Bewegen, Drehen, Skalieren, Schneiden und Anordnen der Objekte.</td></tr>
-    <tr><td class="begriff">5</td><td class="begriff">3D-Ansicht</td>
-        <td>Virtuelles Druckbett. Hier siehst du dein Objekt so, wie es später gedruckt wird.</td></tr>
-    <tr><td class="begriff">6</td><td class="begriff">Slicen &amp; Ausgabe</td>
-        <td>Startet die Berechnung und öffnet danach die Export-Optionen.</td></tr>
-  </tbody>
-</table>
-
-<h4>Navigation in der 3D-Ansicht</h4>
-<table>
-  <thead><tr><th style="width:34%">Eingabe</th><th>Wirkung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Mausrad drehen</td><td>Zoomen (näher heran / weiter weg)</td></tr>
-    <tr><td class="begriff">Rechte Maustaste ziehen</td><td>Ansicht verschieben</td></tr>
-    <tr><td class="begriff">Linke Maustaste auf leerer Fläche ziehen</td><td>Ansicht drehen</td></tr>
-    <tr><td class="begriff">Linksklick auf das Objekt</td><td>Objekt auswählen</td></tr>
-    <tr><td class="begriff"><kbd>Entf</kbd></td><td>Ausgewähltes Objekt löschen</td></tr>
-  </tbody>
-</table>
-
-<h4>Zwei Ansichten im Prozess-Bereich: <i>Allgemein</i> und <i>Objekte</i></h4>
-
-<p>Über die beiden kleinen Schaltflächen neben der Überschrift <b>Prozess</b>
-schaltest du zwischen zwei Darstellungen um:</p>
-
-<ul>
-  <li><b>Allgemein</b> – die vollständige Parameterliste mit allen Reitern
-      (Qualität, Struktur, Geschwindigkeit, Stützen, Multimaterial,
-      Sonstiges). Diese Ansicht nutzt du in den Kapiteln 7 bis 12.</li>
-  <li><b>Objekte</b> – eine Baumansicht aller Objekte auf der Druckplatte,
-      darunter die wichtigsten Werte als <b>Schnelleinstellungen</b> im Reiter
-      <b>Häufig</b>.</li>
-</ul>
-
-<figure class="klein">
-  <img src="bilder/abb24_objekte.jpg" alt="Objekt-Baumansicht mit Druckplatte und Modell sowie Schnelleinstellungen Schichthöhe, Fülldichte, Wandschleifen und Stützstrukturen">
-  <figcaption><b>Abb. 2b:</b> Die Ansicht <b>Objekte</b>. Oben die Baumansicht
-  (Druckplatte → Modell → Außenseite), unten der Reiter <b>Häufig</b> mit den
-  vier meistgenutzten Werten auf einen Blick.</figcaption>
-</figure>
-
-<div class="box tipp">
-  <div class="kopf">Der schnellste Weg für den Unterricht</div>
-  <p>Für die allermeisten Aufgaben genügen die vier Werte aus dem Reiter
-  <b>Häufig</b>: <b>Schichthöhe</b>, <b>Fülldichte</b>, <b>Wandschleifen</b>
-  und <b>Stützstrukturen aktivieren</b>. Wenn du unter Zeitdruck arbeitest,
-  stelle nur diese vier ein – alles andere übernimmt das Prozessprofil.</p>
-</div>
-
-<h4>Die Werkzeugleiste im Überblick</h4>
-<p>Die vier linken Schaltflächen der Werkzeugleiste arbeiten immer, auch ohne
-ausgewähltes Objekt:</p>
-<table>
-  <thead><tr><th style="width:32%">Schaltfläche</th><th>Funktion</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Hinzufügen <kbd>Strg</kbd>+<kbd>I</kbd></td>
-        <td>Weiteres Modell importieren – dasselbe wie <b>Datei → Importieren</b>.</td></tr>
-    <tr><td class="begriff">Druckplatte hinzufügen</td>
-        <td>Legt eine zweite virtuelle Druckplatte an. Praktisch, wenn ein Auftrag auf mehrere Drucke aufgeteilt werden muss.</td></tr>
-    <tr><td class="begriff">Automatische Ausrichtung</td>
-        <td>Dreht das Objekt selbstständig so, dass es möglichst günstig liegt (große ebene Fläche nach unten).</td></tr>
-    <tr><td class="begriff">Alle Objekte anordnen <kbd>A</kbd></td>
-        <td>Verteilt alle Objekte mit passendem Abstand auf der Platte.</td></tr>
-  </tbody>
-</table>
-<p>Die übrigen Schaltflächen (Bewegen, Drehen, Skalieren, Schneiden, Text
-aufbringen u.&nbsp;a.) werden erst aktiv, sobald ein Objekt <b>ausgewählt</b>
-ist. Sind sie ausgegraut, hast du vergessen, das Modell anzuklicken.</p>
-
-
-<!-- ==================== TEIL 2: ARBEITSABLAUF ==================== -->
-
-<h3 id="s1"><span class="nr">4</span>Schritt 1 – Das 3D-Modell importieren</h3>
-
-<p><b>Importieren</b> bedeutet: eine Datei aus einem anderen Programm in den
-Slicer laden. Der Anycubic Slicer Next versteht mehrere Formate – am
-häufigsten arbeitest du mit <code>.stl</code> (aus Fusion, Blender oder von
-Plattformen wie Printables) und <code>.3mf</code>.</p>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – Modell laden</div>
-  <img src="bilder/gif01_modell_laden.gif" alt="Animation: Menü Datei, Untermenü Importieren, Dateidialog, geladenes Modell auf dem Druckbett">
-  <div class="bu">Die vier Schritte im Zeitraffer: Menü <b>Datei</b> öffnen →
-  <b>Importieren</b> → Datei auswählen → Modell erscheint auf dem Druckbett.</div>
-</div>
-
-<ul class="schritte">
-  <li>Öffne das Menü <b>Datei</b> oben links.</li>
-  <li>Fahre auf <b>Importieren</b> und wähle
-      <b>Importiere 3MF/STL/STEP/SVG/OBJ/AMF…</b>
-      (Tastenkürzel: <kbd>Strg</kbd>&nbsp;+&nbsp;<kbd>I</kbd>).</li>
-  <li>Navigiere zu deiner Datei und bestätige mit <b>Öffnen</b>.</li>
-  <li>Das Modell erscheint mittig auf dem virtuellen Druckbett.</li>
-</ul>
-
-<figure class="klein">
-  <img src="bilder/abb03_import_menue.jpg" alt="Menü Datei mit geöffnetem Untermenü Importieren">
-  <figcaption><b>Abb. 3:</b> Der Importbefehl im Menü <b>Datei</b>. Die
-  Auflistung zeigt zugleich alle Formate, die der Slicer lesen kann.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb04_import_dialog.jpg" alt="Windows-Dateiauswahldialog des Slicers">
-  <figcaption><b>Abb. 4:</b> Der Dateiauswahl-Dialog. Der Filter unten rechts
-  („Supported files“) blendet alle Dateien aus, die der Slicer nicht öffnen
-  kann.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb05_modell_geladen.jpg" alt="Geladenes Modell auf dem Druckbett mit Informationsfeld">
-  <figcaption><b>Abb. 5:</b> Das geladene Modell auf dem Druckbett. Unten
-  rechts blendet der Slicer automatisch die Objektinformationen ein.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb05b_objektinfo.jpg" alt="Objektinformationen: Name, Größe, Volumen, Anzahl Dreiecke">
-  <figcaption><b>Abb. 6:</b> Die Objektinformationen im Detail.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:26%">Angabe</th><th>Bedeutung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Größe</td>
-        <td>Abmessungen in Millimetern: Länge&nbsp;×&nbsp;Breite&nbsp;×&nbsp;Höhe. Hier <code>71 × 26 × 4,1&nbsp;mm</code>. Prüfe sofort, ob das Objekt auf das Druckbett passt.</td></tr>
-    <tr><td class="begriff">Volumen</td>
-        <td>Rauminhalt des Modells in Kubikmillimetern. Ein grober Anhaltspunkt für den Materialverbrauch – der echte Verbrauch hängt aber stark von der Füllung ab.</td></tr>
-    <tr><td class="begriff">Dreiecke</td>
-        <td>Aus wie vielen Dreiecksflächen die Oberfläche besteht. Je mehr Dreiecke, desto feiner sind Rundungen aufgelöst – und desto größer ist die Datei.</td></tr>
-  </tbody>
-</table>
-
-<div class="box achtung">
-  <div class="kopf">Achtung</div>
-  <p>Erscheint das Objekt <b>grau, durchgestrichen oder außerhalb des
-  Bettrahmens</b>, passt es nicht in den Bauraum. Verkleinere es (Kapitel 8)
-  oder verschiebe es auf das Bett. Ein Objekt außerhalb des Bauraums lässt
-  sich nicht slicen.</p>
-</div>
-
-
-<h3 id="s2"><span class="nr">5</span>Schritt 2 – Drucker und Druckbett prüfen</h3>
-
-<p>Der Slicer berechnet alles auf Grundlage eines bestimmten Druckermodells:
-Bauraumgröße, Düsendurchmesser, maximale Temperaturen. Stimmt die Auswahl
-nicht mit dem realen Gerät überein, ist der G-Code unbrauchbar.</p>
-
-<figure class="klein">
-  <img src="bilder/abb06_drucker.jpg" alt="Bereich Drucker mit Modellauswahl und Druckbetttyp">
-  <figcaption><b>Abb. 7:</b> Bereich <b>Drucker</b>. Oben das Modell
-  (<code>Anycubic Kobra 3 0.4 nozzle</code>), darunter der
-  <b>Druckbetttyp</b> mit seinen drei Optionen.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb06b_druckerliste.jpg" alt="Aufgeklappte Druckerliste mit den Varianten der Kobra X und Kobra 3">
-  <figcaption><b>Abb. 7b:</b> Die Druckerliste. Jedes Gerät ist mehrfach
-  aufgeführt – einmal je Düsendurchmesser.</figcaption>
-</figure>
-
-<ul>
-  <li><b>Druckermodell:</b> Muss exakt dem Gerät entsprechen, an dem du
-      druckst. Im BKWI arbeiten wir mit der <b>Anycubic Kobra 3</b>. Der
-      Zusatz <code>0.4 nozzle</code> gibt den Düsendurchmesser an – bei uns
-      immer <code>0.4</code>. Wählst du versehentlich eine andere Kobra oder
-      eine andere Düse, rechnet der Slicer mit falschem Bauraum und falscher
-      Linienbreite.</li>
-  <li><b>Druckbetttyp:</b> Die Oberfläche der Druckplatte. Die Kobra 3 bietet
-      drei Möglichkeiten:
-      <ul>
-        <li><code>Texturierte PEI-Platte</code> – raue Oberfläche, gibt der Unterseite eine matte Struktur.</li>
-        <li><code>Smooth Plate</code> – glatte Platte, ergibt eine glänzende Unterseite. <b>Unser Standard.</b></li>
-        <li><code>Kalte Druckplatte</code> – für Materialien, die ohne Heizbett gedruckt werden.</li>
-      </ul>
-      Die Beschriftung auf dem realen Druckbett verrät dir den Typ.</li>
-</ul>
-
-<div class="box merk">
-  <div class="kopf">Woran du die Wahl später erkennst</div>
-  <p>Sobald du den Drucker wechselst, passt der Slicer automatisch das
-  Prozessprofil an. Aus <code>0.20mm Standard @AC KX</code> wird
-  <code>0.20mm Standard @AC K3</code>. Das Kürzel am Ende (<b>K3</b>) ist die
-  Kurzform des Druckers – ein schneller Kontrollblick, ob alles zusammenpasst.</p>
-</div>
-
-<div class="box info">
-  <div class="kopf">Fachbegriff: PEI</div>
-  <p><b>PEI</b> (Polyetherimid) ist eine Kunststoffbeschichtung auf der
-  Federstahl-Druckplatte. Sie hält das Objekt im warmen Zustand fest und gibt
-  es nach dem Abkühlen von selbst wieder frei – deshalb sollte man ein
-  fertiges Werkstück nie mit Gewalt abhebeln.</p>
-</div>
-
-
-<h3 id="s3"><span class="nr">6</span>Schritt 3 – Das Filament auswählen</h3>
-
-<p>Jeder Kunststoff schmilzt bei einer anderen Temperatur und verhält sich
-beim Abkühlen anders. Deshalb muss der Slicer wissen, welches Material
-eingelegt ist. Ein Klick auf das Auswahlfeld öffnet die Liste.</p>
-
-<figure class="klein">
-  <img src="bilder/abb07_filament.jpg" alt="Aufgeklappte Filamentliste mit PLA, PETG, ABS, ASA und TPU">
-  <figcaption><b>Abb. 8:</b> Die Filamentliste. Oben stehen selbst angelegte
-  Profile (<b>Benutzerdefinierte Profile</b>), darunter die mitgelieferten
-  <b>Systemvoreinstellungen</b>.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:16%">Material</th><th style="width:22%">Eigenschaften</th><th>Typischer Einsatz im Unterricht</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">PLA</td>
-        <td>Formstabil, geringe Verformung beim Abkühlen, druckt sich am einfachsten. Wenig hitzebeständig (ab ca. 60&nbsp;°C weich).</td>
-        <td><b>Standardmaterial.</b> Schilder, Modelle, Prototypen, Schlüsselanhänger.</td></tr>
-    <tr><td class="begriff">PETG</td>
-        <td>Zäher und temperaturbeständiger als PLA, dafür anspruchsvoller im Druckbild (neigt zu Fäden).</td>
-        <td>Funktionsteile, Halterungen, Gehäuse.</td></tr>
-    <tr><td class="begriff">ABS / ASA</td>
-        <td>Sehr temperaturbeständig, verzieht sich aber stark beim Abkühlen. Braucht eine geschlossene Kammer und gute Absaugung.</td>
-        <td>Nur nach Absprache mit der Lehrkraft.</td></tr>
-    <tr><td class="begriff">TPU</td>
-        <td>Gummiartig und flexibel, muss sehr langsam gedruckt werden.</td>
-        <td>Dichtungen, Stoßschutz, flexible Bänder.</td></tr>
-  </tbody>
-</table>
-
-<div class="box merk">
-  <div class="kopf">Regel</div>
-  <p>Die Einstellung im Slicer beschreibt <em>nicht</em>, was gedruckt werden
-  <em>soll</em> – sie beschreibt, was am Drucker <em>tatsächlich eingelegt
-  ist</em>. Kontrolliere immer die Rolle am Gerät, bevor du wählst.</p>
-</div>
-
-<h4>Das Modell einfärben</h4>
-
-<p>Vor dem Filamentnamen steht ein kleines farbiges Quadrat mit der Nummer
-<code>1</code>. Es zeigt die <b>Filamentfarbe</b>. Ein Klick darauf öffnet den
-Farbwähler – und das Modell auf dem Druckbett wechselt sofort die Farbe.</p>
-
-<figure class="klein">
-  <img src="bilder/abb31_filament_swatch.jpg" alt="Filamentbereich mit dem farbigen Quadrat vor dem Filamentnamen">
-  <figcaption><b>Abb. 8b:</b> Das Farbfeld vor dem Filamentnamen. Ein Klick
-  darauf öffnet die Farbauswahl.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb29_farbwaehler.jpg" alt="Dialog Bitte wählen Sie die Filamentfarbe aus mit Farbpalette und Zahlenfeldern">
-  <figcaption><b>Abb. 8c:</b> Der Farbwähler. Links die <b>Grundfarben</b>,
-  in der Mitte das Farbfeld zum freien Ziehen, rechts die Zahlenwerte.</figcaption>
-</figure>
-
-<ul class="schritte">
-  <li>Klicke auf das <b>Farbquadrat</b> vor dem Filamentnamen.</li>
-  <li>Wähle eine der <b>Grundfarben</b> – oder klicke frei in das große
-      Farbfeld und stelle die Helligkeit über den schmalen Balken rechts ein.</li>
-  <li>Bestätige mit <b>OK</b>. Das Modell erscheint sofort in der neuen Farbe.</li>
-</ul>
-
-<figure class="klein">
-  <img src="bilder/abb30_farbe_orange.jpg" alt="Farbwähler mit ausgewähltem Orange und den Werten Rot 255, Grün 128, Blau 64">
-  <figcaption><b>Abb. 8d:</b> Ein Orangeton ist gewählt. Rechts stehen die
-  zugehörigen Zahlenwerte: <code>Rot&nbsp;255</code>,
-  <code>Grün&nbsp;128</code>, <code>Blau&nbsp;64</code>.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb32_modell_orange.jpg" alt="Das Modell erscheint nach der Farbwahl orange auf dem Druckbett">
-  <figcaption><b>Abb. 8e:</b> Ergebnis: Modell und Farbquadrat sind orange.</figcaption>
-</figure>
-
-<div class="box info">
-  <div class="kopf">Fachbegriff: RGB-Farbmodell</div>
-  <p>Die drei Zahlen <b>Rot</b>, <b>Grün</b> und <b>Blau</b> beschreiben eine
-  Farbe additiv: Jeder Wert reicht von <code>0</code> (Farbanteil aus) bis
-  <code>255</code> (Farbanteil voll). <code>255/128/64</code> heißt also
-  „voll Rot, halb Grün, wenig Blau“ – ergibt Orange. Auf demselben Prinzip
-  arbeitet jeder Bildschirm. Das Kolping-Orange hat übrigens die Werte
-  <code>238/114/2</code>.</p>
-</div>
-
-<div class="box achtung">
-  <div class="kopf">Wichtig: Die Farbe ist reine Anzeige</div>
-  <p>Der Farbwähler ändert <b>nur die Darstellung im Slicer</b>. Der Drucker
-  druckt in der Farbe des Filaments, das tatsächlich eingelegt ist – ein
-  Klick auf „Orange“ macht aus weißem PLA kein oranges. Der Nutzen liegt
-  woanders:</p>
-  <ul>
-    <li><b>Realistische Vorschau:</b> Du siehst, wie das Werkstück später wirkt.</li>
-    <li><b>Übersicht bei mehreren Objekten:</b> Verschiedene Farben helfen, Bauteile auseinanderzuhalten.</li>
-    <li><b>Kontrast:</b> Auf dem dunklen Druckbett sind helle Farben deutlich besser zu erkennen als dunkle.</li>
-  </ul>
-</div>
-
-
-<h3 id="s4"><span class="nr">7</span>Schritt 4 – Prozessprofil und Schichthöhe</h3>
-
-<p>Ein <b>Prozessprofil</b> ist ein gespeichertes Paket aus mehreren hundert
-Druckparametern. Statt jeden Wert einzeln einzustellen, wählst du ein
-passendes Profil und passt danach nur noch wenige Werte an.</p>
-
-<figure class="klein">
-  <img src="bilder/abb08_prozessprofil.jpg" alt="Aufgeklappte Liste der Prozessprofile mit verschiedenen Schichthöhen">
-  <figcaption><b>Abb. 9:</b> Die Prozessprofile. Die Zahl am Anfang
-  (<code>0.08mm</code> … <code>0.28mm</code>) gibt die
-  <b>Schichthöhe</b> an.</figcaption>
-</figure>
-
-<h4>Die Schichthöhe – der wichtigste Kompromiss</h4>
-
-<p>Die <b>Schichthöhe</b> (englisch <i>layer height</i>) legt fest, wie dick
-jede einzelne gedruckte Scheibe ist. Sie ist der zentrale Kompromiss zwischen
-Oberflächenqualität und Druckdauer.</p>
-
-<table>
-  <thead><tr><th style="width:18%">Schichthöhe</th><th style="width:26%">Ergebnis</th><th>Wann sinnvoll?</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">0,08 – 0,12 mm</td>
-        <td>Sehr glatte Oberfläche, feine Details – aber zwei- bis dreifache Druckzeit.</td>
-        <td>Kleine Figuren, sichtbare Schauteile, feine Schrift.</td></tr>
-    <tr><td class="begriff">0,16 – 0,20 mm</td>
-        <td>Guter Kompromiss aus Qualität und Zeit.</td>
-        <td><b>Standard im Unterricht.</b> Für fast alles geeignet.</td></tr>
-    <tr><td class="begriff">0,24 – 0,28 mm</td>
-        <td>Deutlich sichtbare Schichtstufen, dafür sehr schnell.</td>
-        <td>Grobe Prototypen, Passungstests, große einfache Teile.</td></tr>
-  </tbody>
-</table>
-
-<figure class="klein">
-  <img src="bilder/abb09_schichthoehe.jpg" alt="Reiter Qualität mit den Feldern Schichthöhe und Höhe der ersten Schicht">
-  <figcaption><b>Abb. 10:</b> Reiter <b>Qualität</b>. Neben der Schichthöhe
-  steht die <b>Höhe der ersten Schicht</b> – sie darf gerne etwas größer sein,
-  weil die erste Schicht die Haftung auf dem Druckbett sichert.</figcaption>
-</figure>
-
-<div class="box info">
-  <div class="kopf">Faustregel</div>
-  <p>Die Schichthöhe sollte höchstens <b>75&nbsp;%</b> des Düsendurchmessers
-  betragen. Bei einer 0,4-mm-Düse sind das maximal <b>0,3&nbsp;mm</b>.
-  Darüber verbinden sich die Schichten nicht mehr zuverlässig.</p>
-</div>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – Einstellungen wählen</div>
-  <img src="bilder/gif02_einstellungen.gif" alt="Animation: Filament auswählen, Prozessprofil wählen, Reiter Qualität und Struktur">
-  <div class="bu">Filament → Prozessprofil → Reiter <b>Qualität</b> →
-  Reiter <b>Struktur</b>: die Reihenfolge, in der du dich durch die
-  Einstellungen arbeitest.</div>
-</div>
-
-
-<h3 id="s5"><span class="nr">8</span>Schritt 5 – Das Objekt ausrichten</h3>
-
-<p>Wie ein Objekt auf dem Druckbett liegt, entscheidet über Festigkeit,
-Oberflächenqualität und darüber, ob überhaupt Stützmaterial nötig wird. Drei
-Werkzeuge stehen dafür in der Werkzeugleiste bereit.</p>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – die drei Werkzeuge</div>
-  <img src="bilder/gif03_werkzeuge.gif" alt="Animation: Bewegen, Drehen und Skalieren im Wechsel">
-  <div class="bu">Bewegen → Drehen → Skalieren. Jedes Werkzeug blendet ein
-  eigenes Eingabefeld mit exakten Zahlenwerten ein.</div>
-</div>
-
-<h4>Bewegen (Taste <kbd>M</kbd>)</h4>
-<figure class="klein">
-  <img src="bilder/abb10_bewegen.jpg" alt="Werkzeug Bewegen mit Positionsfeldern für X, Y und Z">
-  <figcaption><b>Abb. 11:</b> Werkzeug <b>Bewegen</b>. Die
-  <b>Weltkoordinaten</b> geben die Position auf dem Druckbett an: X nach
-  rechts, Y nach hinten, Z nach oben.</figcaption>
-</figure>
-<p>Du kannst das Objekt mit der Maus an den farbigen Pfeilen ziehen oder
-exakte Zahlenwerte eintippen. <b>Z</b> sollte in der Regel so bleiben, dass
-das Objekt auf dem Bett aufliegt.</p>
-
-<h4>Drehen (Taste <kbd>R</kbd>)</h4>
-<figure class="klein">
-  <img src="bilder/abb11_drehen.jpg" alt="Werkzeug Drehen mit Eingabefeldern für die Rotation um X, Y und Z">
-  <figcaption><b>Abb. 12:</b> Werkzeug <b>Drehen</b>. Die Werte sind
-  Winkelgrade. Über die farbigen Ringe im 3D-Fenster lässt sich frei drehen.</figcaption>
-</figure>
-<div class="box tipp">
-  <div class="kopf">Warum Drehen so wichtig ist</div>
-  <p>Ein gedrucktes Teil ist <b>quer zur Schichtrichtung am schwächsten</b> –
-  die Schichten können dort auseinandergezogen werden. Lege ein Bauteil also
-  so, dass die spätere Belastung <em>innerhalb</em> einer Schicht wirkt und
-  nicht zwischen zwei Schichten. Zweitens gilt: Je flacher ein Objekt liegt,
-  desto weniger Stützmaterial wird gebraucht.</p>
-</div>
-
-<h4>Skalieren (Taste <kbd>S</kbd>) – die Größe verändern</h4>
-
-<p><b>Skalieren</b> bedeutet: das Objekt vergrößern oder verkleinern, ohne
-seine Form zu verändern. Das ist der Werkzeugkasten für die Frage
-<em>„Wie groß soll mein Schlüsselanhänger eigentlich werden?“</em></p>
-
-<figure class="klein">
-  <img src="bilder/abb33_skal_100.jpg" alt="Werkzeug Skalieren mit 100 Prozent und der Größe 71 mal 26 mal 4,10 Millimeter">
-  <figcaption><b>Abb. 13:</b> Werkzeug <b>Skalieren</b> im Ausgangszustand.
-  Oben die Größe in <b>Prozent</b>, darunter dieselbe Größe in
-  <b>Millimetern</b>. <code>100&nbsp;%</code> heißt: Originalgröße der Datei.</figcaption>
-</figure>
-
-<h5>Drei Wege, die Größe zu ändern</h5>
-<ol>
-  <li><b>Anfasser ziehen:</b> An den farbigen Würfeln am Objekt ziehen. Ein
-      <b>Eckpunkt</b> skaliert alle Achsen gleichzeitig, ein Punkt an der
-      Kantenmitte nur eine Achse. Schnell, aber ungenau.</li>
-  <li><b>Prozentwert eintragen:</b> <code>200</code> in ein
-      Prozentfeld schreiben – das Objekt wird doppelt so lang, doppelt so
-      breit und doppelt so hoch.</li>
-  <li><b>Zielmaß eintragen:</b> In die Zeile <b>Größe</b> direkt den
-      gewünschten Millimeterwert schreiben, z.&nbsp;B. <code>50</code> für eine
-      Länge von genau 50&nbsp;mm. Das ist der Weg, wenn ein Bauteil in eine
-      vorhandene Öffnung passen muss.</li>
-</ol>
-
-<figure>
-  <img src="bilder/abb12b_skaliergriffe.jpg" alt="Objekt mit farbigen Skalier-Anfassern in der 3D-Ansicht">
-  <figcaption><b>Abb. 14:</b> Die farbigen Anfasser am Objekt. Ziehen an einem
-  Eckpunkt skaliert alle Achsen gleichzeitig.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb34_skal_214.jpg" alt="Werkzeug Skalieren nach dem Vergrößern auf 214,43 Prozent">
-  <figcaption><b>Abb. 15:</b> Nach dem Ziehen an einem Eckpunkt:
-  <code>214,43&nbsp;%</code>. Alle drei Achsen sind gleich mitgewachsen – aus
-  71&nbsp;×&nbsp;26&nbsp;×&nbsp;4,10&nbsp;mm wurden
-  152,25&nbsp;×&nbsp;55,75&nbsp;×&nbsp;8,79&nbsp;mm. Rechts erscheint zusätzlich
-  ein <b>Zurücksetzen-Symbol</b>.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb35_modell_gross.jpg" alt="Das vergrößerte Modell auf dem Druckbett">
-  <figcaption><b>Abb. 16:</b> Dasselbe Modell nach dem Vergrößern.</figcaption>
-</figure>
-
-<div class="box achtung">
-  <div class="kopf">Kontrollkästchen „einheitliche Skalierung“</div>
-  <p>Ist der Haken gesetzt, ändern sich alle drei Achsen im gleichen
-  Verhältnis – das Objekt bleibt proportional. Nimmst du den Haken heraus,
-  kannst du das Objekt gezielt in einer Richtung stauchen oder strecken. Das
-  wird schnell unbeabsichtigt gemacht: <b>Haken im Zweifel gesetzt lassen.</b></p>
-</div>
-
-<h5>Was beim Vergrößern wirklich passiert</h5>
-
-<p class="lead">Das ist der Punkt, an dem viele sich verschätzen: Wenn du ein
-Objekt auf das <b>Doppelte</b> vergrößerst, wird es <em>nicht</em> doppelt so
-teuer – sondern deutlich mehr. Der Grund ist einfache Geometrie.</p>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – vergrößern und die Folgen sehen</div>
-  <img src="bilder/gif06_skalieren.gif" alt="Animation: Skalierung von 100 auf 214 Prozent und die zugehörigen Statistiken in der Vorschau">
-  <div class="bu">100&nbsp;% → 214&nbsp;% → Statistik der großen Version →
-  Statistik der kleinen Version im direkten Vergleich.</div>
-</div>
-
-<p>Wir haben genau das gemessen: dasselbe Modell, dieselben Einstellungen
-(0,2&nbsp;mm Schichthöhe, 15&nbsp;% Füllung, 2 Wandschleifen, PLA), einmal bei
-100&nbsp;% und einmal bei 214,43&nbsp;% gesliced.</p>
-
-<table>
-  <thead>
-    <tr><th style="width:34%">Messwert</th><th style="width:22%">100 %</th><th style="width:22%">214,43 %</th><th>Faktor</th></tr>
-  </thead>
-  <tbody>
-    <tr><td class="begriff">Länge × Breite × Höhe</td><td>71 × 26 × 4,10 mm</td><td>152,25 × 55,75 × 8,79 mm</td><td>2,14 ×</td></tr>
-    <tr><td class="begriff">Volumen</td><td>4.434,76 mm³</td><td>43.725,7 mm³</td><td><b>9,86 ×</b></td></tr>
-    <tr><td class="begriff">Anzahl Schichten</td><td>20</td><td>44</td><td>2,2 ×</td></tr>
-    <tr><td class="begriff">Filamentverbrauch</td><td>3,40 g</td><td>20,69 g</td><td><b>6,1 ×</b></td></tr>
-    <tr><td class="begriff">Druckdauer</td><td>8 min 14 s</td><td>40 min 9 s</td><td><b>4,9 ×</b></td></tr>
-    <tr><td class="begriff">Materialkosten</td><td>0,07</td><td>0,41</td><td>5,9 ×</td></tr>
-  </tbody>
-</table>
-
-<figure class="klein">
-  <img src="bilder/abb36_stat_100.jpg" alt="Statistik bei 100 Prozent: 3,40 Gramm, 8 Minuten 14 Sekunden">
-  <figcaption><b>Abb. 17:</b> Gesamtschätzung bei <b>100&nbsp;%</b>.</figcaption>
-</figure>
-<figure class="klein">
-  <img src="bilder/abb37_stat_214.jpg" alt="Statistik bei 214 Prozent: 20,69 Gramm, 40 Minuten 9 Sekunden">
-  <figcaption><b>Abb. 18:</b> Gesamtschätzung bei <b>214,43&nbsp;%</b> – bei
-  identischen Einstellungen.</figcaption>
-</figure>
-
-<div class="box merk">
-  <div class="kopf">Die Regel dahinter: das Quadrat-Würfel-Gesetz</div>
-  <p>Verdoppelst du alle Kantenlängen eines Körpers, dann</p>
-  <ul>
-    <li>verdoppelt sich die <b>Länge</b> (Faktor 2 = 2¹),</li>
-    <li>vervierfacht sich die <b>Fläche</b> (Faktor 4 = 2²),</li>
-    <li>verachtfacht sich das <b>Volumen</b> (Faktor 8 = 2³).</li>
-  </ul>
-  <p>In unserer Messung war der Faktor 2,14 – und 2,14³ ≈ 9,8. Genau das
-  zeigt die Volumenzeile in der Tabelle.</p>
-</div>
-
-<div class="box info">
-  <div class="kopf">Warum das Material trotzdem nur 6× statt 9,9× wächst</div>
-  <p>Ein guter Beobachter fragt sich: Wenn sich das Volumen fast verzehnfacht,
-  warum steigt der Verbrauch dann „nur“ auf das Sechsfache? Weil das Objekt
-  <b>innen hohl</b> ist. Der Slicer druckt Wände und Deckschichten – die
-  wachsen mit der <em>Fläche</em>, also nur quadratisch – und füllt den
-  Innenraum mit 15&nbsp;% Gitter. Nur dieser Anteil wächst kubisch. Bei
-  100&nbsp;% Füllung läge der Faktor tatsächlich bei rund 9,9.</p>
-</div>
-
-<h5>Was du beim Verändern der Größe sonst noch beachten musst</h5>
-<table>
-  <thead><tr><th style="width:26%">Beim <b>Vergrößern</b></th><th>Folge</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Bauraum</td><td>Das Objekt kann über den Rand hinauswachsen. Der Slicer markiert es dann und verweigert das Slicen. Die Kobra 3 hat einen Bauraum von 250 × 250 × 260&nbsp;mm.</td></tr>
-    <tr><td class="begriff">Zeit und Material</td><td>Steigen überproportional – siehe Tabelle oben. Plane die Unterrichtszeit realistisch.</td></tr>
-    <tr><td class="begriff">Details</td><td>Werden größer und dadurch besser druckbar. Feine Schrift, die bei 100&nbsp;% verschwimmt, wird bei 200&nbsp;% oft erst lesbar.</td></tr>
-  </tbody>
-</table>
-<table>
-  <thead><tr><th style="width:26%">Beim <b>Verkleinern</b></th><th>Folge</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Wandstärke</td><td>Achtung: Die Wandstärke schrumpft <em>nicht</em> mit! Sie bleibt bei 2 × 0,42&nbsp;mm, weil sie von der Düse bestimmt wird. Ein bei 50&nbsp;% gedrucktes Teil ist deshalb im Verhältnis viel massiver – und wirkt oft plump.</td></tr>
-    <tr><td class="begriff">Details</td><td>Alles unter etwa <b>0,5&nbsp;mm</b> kann die 0,4-mm-Düse nicht mehr abbilden. Feine Gravuren verschwinden einfach.</td></tr>
-    <tr><td class="begriff">Löcher und Zapfen</td><td>Ein Loch für einen Schlüsselring, das bei 100&nbsp;% 5&nbsp;mm misst, ist bei 50&nbsp;% nur noch 2,5&nbsp;mm groß – der Ring passt nicht mehr.</td></tr>
-    <tr><td class="begriff">Schichthöhe</td><td>Bleibt ebenfalls bei 0,2&nbsp;mm. Ein 4&nbsp;mm hohes Teil hat 20 Schichten, bei 50&nbsp;% nur noch 10 – die Treppenstufen fallen relativ stärker auf.</td></tr>
-  </tbody>
-</table>
-
-<div class="box tipp">
-  <div class="kopf">Zurück zur Originalgröße</div>
-  <p>Sobald du skaliert hast, erscheint im Werkzeugfenster ein
-  <b>Zurücksetzen-Symbol</b> (gebogener Pfeil). Alternativ bringt dich die
-  <b>Rückgängig</b>-Schaltfläche in der obersten Menüleiste
-  (<kbd>Strg</kbd>&nbsp;+&nbsp;<kbd>Z</kbd>) zuverlässig auf 100&nbsp;% zurück.</p>
-</div>
-
-<div class="box gut">
-  <div class="kopf">Nützliche Automatik-Funktionen</div>
-  <p>In der Werkzeugleiste findest du außerdem Schaltflächen für
-  <b>Automatisch anordnen</b> (verteilt mehrere Objekte sinnvoll auf dem
-  Bett) und <b>Automatisch ausrichten</b> (legt das Objekt auf seine größte
-  ebene Fläche). Beide sparen viel Handarbeit.</p>
-</div>
-
-
-<h4>Negativbeispiel: Was passiert, wenn das Objekt schlecht liegt?</h4>
-
-<p class="lead">Theorie überzeugt selten. Deshalb hier derselbe
-Schlüsselanhänger zweimal gesliced – einmal flach liegend, einmal um
-47,6° gekippt. Alle übrigen Einstellungen sind identisch. Das Ergebnis ist
-drastisch.</p>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – gute und schlechte Ausrichtung</div>
-  <img src="bilder/gif07_ausrichtung.gif" alt="Animation: flach liegendes Objekt ohne Stützen, dann gekipptes Objekt mit grünem Stützmaterial">
-  <div class="bu">Flach liegend (keine Stützen) → gekippt → Vorschau mit
-  Stützgerüst → Nahaufnahme des Stützmaterials.</div>
-</div>
-
-<h5>Schritt 1 – Das Objekt wird gekippt</h5>
-<figure>
-  <img src="bilder/abb38_schlecht_gedreht.jpg" alt="Das Objekt steht schräg im Raum, um 47,6 Grad um die Y-Achse gedreht">
-  <figcaption><b>Abb. 15a:</b> Über den Drehring wurde das Objekt um
-  <code>47,60°</code> um die <b>Y-Achse</b> gekippt. Es steht jetzt schräg
-  im Raum und berührt das Druckbett nur noch mit einer Kante.</figcaption>
-</figure>
-
-<figure class="klein">
-  <img src="bilder/abb40_masse_gekippt.jpg" alt="Objektinformationen nach dem Kippen: 50,2 mal 26 mal 54,58 Millimeter">
-  <figcaption><b>Abb. 15b:</b> Der erste Warnhinweis steckt in den
-  Objektinformationen: Aus
-  <code>71 × 26 × 4,1&nbsp;mm</code> ist
-  <code>50,23 × 26 × 54,58&nbsp;mm</code> geworden. Die <b>Bauhöhe</b> ist von
-  4,1&nbsp;mm auf 54,6&nbsp;mm gesprungen – das <b>Dreizehnfache</b>. Und die
-  Bauhöhe bestimmt die Anzahl der Schichten.</figcaption>
-</figure>
-
-<h5>Schritt 2 – Stützen werden nötig</h5>
-<figure class="klein">
-  <img src="bilder/abb39_stuetzen_an.jpg" alt="Reiter Stützen mit gesetztem Haken bei Stützstrukturen aktivieren">
-  <figcaption><b>Abb. 15c:</b> Im Reiter <b>Stützen</b> wurde
-  <b>Stützstrukturen aktivieren</b> eingeschaltet. Ohne diesen Haken würde
-  das schräge Objekt in der Luft beginnen und der Druck scheitern.</figcaption>
-</figure>
-
-<h5>Schritt 3 – Das Ergebnis in der Vorschau</h5>
-<figure>
-  <img src="bilder/abb41_vorschau_stuetzen.jpg" alt="Vorschau des gekippten Objekts mit grünem Stützgerüst am Fuß">
-  <figcaption><b>Abb. 15d:</b> Die Vorschau. Der grüne Klumpen unter dem
-  Objekt ist reines <b>Stützmaterial</b> – Kunststoff, der nach dem Druck
-  abgebrochen und weggeworfen wird.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb42_stuetzen_nah.jpg" alt="Nahaufnahme der grünen Stützstruktur unter dem gekippten Objekt">
-  <figcaption><b>Abb. 15e:</b> Nahaufnahme. Gut zu erkennen: Das Stützgerüst
-  ist fast so groß wie das eigentliche Werkstück. Außerdem hinterlassen die
-  Kontaktstellen später sichtbare Spuren auf der Oberfläche.</figcaption>
-</figure>
-
-<h5>Der direkte Vergleich</h5>
-<figure class="klein">
-  <img src="bilder/abb43_stat_gekippt.jpg" alt="Statistik des gekippten Drucks mit Zeile Stützen">
-  <figcaption><b>Abb. 15f:</b> Statistik <b>gekippt</b>. Neu in der Legende:
-  die grüne Zeile <b>Stützen</b> mit 14,7&nbsp;% der Druckzeit.</figcaption>
-</figure>
-<figure class="klein">
-  <img src="bilder/abb45_stat_flach.jpg" alt="Statistik des flach liegenden Drucks ohne Stützen">
-  <figcaption><b>Abb. 15g:</b> Statistik <b>flach liegend</b> – bei
-  eingeschalteter Stützoption. Die Zeile <b>Stützen</b> fehlt komplett:
-  Der Slicer hat erkannt, dass keine gebraucht werden.</figcaption>
-</figure>
-
-<table>
-  <thead>
-    <tr><th style="width:32%">Messwert</th><th style="width:24%">flach liegend</th><th style="width:24%">um 47,6° gekippt</th><th>Unterschied</th></tr>
-  </thead>
-  <tbody>
-    <tr><td class="begriff">Bauhöhe</td><td>4,10 mm</td><td>54,58 mm</td><td>13 × höher</td></tr>
-    <tr><td class="begriff">Anzahl Schichten</td><td>20</td><td>272</td><td><b>13,6 × mehr</b></td></tr>
-    <tr><td class="begriff">Druckdauer</td><td>8 min 14 s</td><td>37 min 44 s</td><td><b>4,6 × länger</b></td></tr>
-    <tr><td class="begriff">Filament gesamt</td><td>3,40 g</td><td>5,35 g</td><td>+ 57 %</td></tr>
-    <tr><td class="begriff">davon Stützmaterial</td><td>0,00 g</td><td>1,07 g</td><td><b>20 % Abfall</b></td></tr>
-    <tr><td class="begriff">Materialkosten</td><td>0,07</td><td>0,11</td><td>+ 57 %</td></tr>
-    <tr><td class="begriff">Nacharbeit</td><td>keine</td><td>Stützen abbrechen, Oberfläche schleifen</td><td>—</td></tr>
-    <tr><td class="begriff">Standfestigkeit</td><td>hoch (große Auflagefläche)</td><td>gering (kippt leicht um)</td><td>—</td></tr>
-  </tbody>
-</table>
-
-<div class="box achtung">
-  <div class="kopf">Lies die Zahlen noch einmal</div>
-  <p>Dasselbe Werkstück, dieselben Einstellungen, dieselbe Maschine. Der
-  einzige Unterschied ist ein Drehwinkel – und der kostet
-  <b>29 Minuten Druckzeit</b>, <b>1,07&nbsp;g Material für den Mülleimer</b>
-  und zusätzliche Handarbeit beim Entfernen der Stützen. Ein einziger
-  falscher Mausklick beim Drehen.</p>
-</div>
-
-<figure>
-  <img src="bilder/abb44_vorschau_flach.jpg" alt="Vorschau des flach liegenden Objekts ohne jedes Stützmaterial">
-  <figcaption><b>Abb. 15h:</b> So sieht die Vorschau bei guter Ausrichtung
-  aus – kein Grün, keine Stützen, keine Nacharbeit.</figcaption>
-</figure>
-
-<div class="box gut">
-  <div class="kopf">Merksatz zur Objektausrichtung</div>
-  <ol>
-    <li><b>Größte ebene Fläche nach unten.</b> Das gibt Haftung, Standfestigkeit und meist die kürzeste Druckzeit.</li>
-    <li><b>Bauhöhe niedrig halten.</b> Die Höhe bestimmt die Schichtzahl – und damit die Druckdauer, fast unabhängig vom Volumen.</li>
-    <li><b>Erst drehen, dann stützen.</b> Stützmaterial ist die Notlösung, nicht der erste Griff.</li>
-    <li><b>Belastungsrichtung bedenken.</b> Die Kraft soll innerhalb einer Schicht wirken, nicht zwischen zwei Schichten.</li>
-    <li><b>Sichtseite nach oben oder außen.</b> Flächen, die auf Stützen liegen, werden nie schön.</li>
-  </ol>
-</div>
-
-
-<!-- ==================== TEIL 3: FEINEINSTELLUNGEN ==================== -->
-
-<h3 id="f1"><span class="nr">9</span>Schritt 6 – Wände und Schalen</h3>
-
-<p>Ein 3D-Druck ist innen fast nie massiv. Er besteht aus einer <b>Außenhaut</b>
-und einem lockeren Stützgerüst im Inneren. Die Außenhaut wird im Reiter
-<b>Struktur</b> eingestellt.</p>
-
-<figure class="klein">
-  <img src="bilder/abb13_waende.jpg" alt="Reiter Struktur mit den Abschnitten Wände und Obere/Untere Schichten">
-  <figcaption><b>Abb. 15:</b> Reiter <b>Struktur</b> mit den Abschnitten
-  <b>Wände</b> und <b>Obere/Untere Schichten</b>.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:30%">Parameter</th><th>Erklärung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Wandschleifen</td>
-        <td>Wie viele Linien der Drucker außen nebeneinander legt, bevor er die Füllung druckt. Bei 0,42&nbsp;mm Linienbreite ergeben <b>2 Wandschleifen</b> ca. 0,85&nbsp;mm Wandstärke. Mehr Wände = stabiler, aber auch mehr Material und Zeit. <b>Für Belastbarkeit sind zusätzliche Wände wirksamer als mehr Füllung.</b></td></tr>
-    <tr><td class="begriff">Obere Schalenschichten</td>
-        <td>Anzahl der massiven Deckschichten oben. Zu wenige davon führen zu Löchern in der Oberseite (die Füllung „scheint durch“). Richtwert: <b>4–5</b>.</td></tr>
-    <tr><td class="begriff">Untere Schalenschichten</td>
-        <td>Massive Schichten am Boden. Richtwert: <b>3–4</b>.</td></tr>
-    <tr><td class="begriff">Muster der Oberfläche</td>
-        <td>Wie die Deckschichten gefüllt werden. <code>Monotonisch</code> legt alle Linien in dieselbe Richtung und ergibt das gleichmäßigste Aussehen.</td></tr>
-  </tbody>
-</table>
-
-<div class="box info">
-  <div class="kopf">Fachbegriff: Perimeter</div>
-  <p>Statt „Wandschleife“ liest man in anderen Slicern oft <b>Perimeter</b>
-  (griechisch: Umfang). Gemeint ist dasselbe: eine umlaufende Konturlinie der
-  Außenwand.</p>
-</div>
-
-
-<h3 id="f2"><span class="nr">10</span>Schritt 7 – Die Füllung (Infill)</h3>
-
-<p>Die <b>Füllung</b> ist das Gitterwerk im Inneren des Objekts. Sie trägt die
-Deckschichten und gibt dem Bauteil Steifigkeit – ohne es massiv und damit
-schwer, teuer und langsam zu machen.</p>
-
-<figure class="klein">
-  <img src="bilder/abb14_fuellung.jpg" alt="Abschnitt Füllung mit Fülldichte 15 Prozent und Füllmuster Gitternetz">
-  <figcaption><b>Abb. 16:</b> Abschnitt <b>Füllung</b>: <b>Fülldichte</b> in
-  Prozent und <b>Füllmuster</b>.</figcaption>
-</figure>
-
-<h4>Fülldichte</h4>
-<table>
-  <thead><tr><th style="width:16%">Wert</th><th>Verwendung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">0 %</td><td>Hohl. Nur für Vasen und reine Schauobjekte.</td></tr>
-    <tr><td class="begriff">10 – 15 %</td><td><b>Standard.</b> Für Schilder, Modelle, Dekoration, Schlüsselanhänger.</td></tr>
-    <tr><td class="begriff">25 – 40 %</td><td>Belastete Funktionsteile, Halterungen, Gehäuse.</td></tr>
-    <tr><td class="begriff">über 50 %</td><td>Nur in Ausnahmefällen. Der Zuwachs an Festigkeit steht kaum noch im Verhältnis zu Material und Zeit.</td></tr>
-  </tbody>
-</table>
-
-<h4>Füllmuster</h4>
-<figure class="mini">
-  <img src="bilder/abb15_fuellmuster.jpg" alt="Auswahlliste der Füllmuster mit Vorschausymbolen">
-  <figcaption><b>Abb. 17:</b> Die Auswahlliste der Füllmuster. Die kleinen
-  Symbole zeigen jeweils die Geometrie.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:22%">Muster</th><th>Eigenschaft</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Gitternetz</td><td>Schnell und in alle Richtungen ordentlich stabil. <b>Guter Allrounder – Standard.</b></td></tr>
-    <tr><td class="begriff">Gyroid</td><td>Gleichmäßig stabil in <em>allen</em> Raumrichtungen, elastisch, materialsparend. Etwas langsamer.</td></tr>
-    <tr><td class="begriff">Bienenwabe</td><td>Sehr stabil, aber deutlich langsamer im Druck.</td></tr>
-    <tr><td class="begriff">Linie</td><td>Sehr schnell, geringe Festigkeit. Für reine Anschauungsmodelle.</td></tr>
-    <tr><td class="begriff">Konzentrisch</td><td>Folgt der Außenkontur. Üblich bei flexiblen Materialien wie TPU.</td></tr>
-  </tbody>
-</table>
-
-
-<h3 id="f3"><span class="nr">11</span>Schritt 8 – Stützstrukturen</h3>
-
-<p>Ein FDM-Drucker kann nicht in die Luft drucken – jede Schicht braucht eine
-Unterlage. Ragt ein Bauteil zu weit über, muss der Slicer ein Hilfsgerüst
-mitdrucken: die <b>Stützstruktur</b> (englisch <i>support</i>). Sie wird nach
-dem Druck abgebrochen und weggeworfen.</p>
-
-<figure class="klein">
-  <img src="bilder/abb16_stuetzen.jpg" alt="Reiter Stützen mit Kontrollkästchen Stützstrukturen aktivieren, Typ, Stil und Schwellenwinkel">
-  <figcaption><b>Abb. 18:</b> Reiter <b>Stützen</b>. Ohne den Haken bei
-  <b>Stützstrukturen aktivieren</b> bleiben alle weiteren Felder wirkungslos.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:28%">Parameter</th><th>Erklärung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Stützstrukturen aktivieren</td>
-        <td>Der Hauptschalter. Standardmäßig aus – aktiviere ihn nur, wenn dein Objekt es wirklich braucht.</td></tr>
-    <tr><td class="begriff">Typ</td>
-        <td><b>Normal</b> = senkrechte Säulen, sehr zuverlässig, aber materialintensiv. <b>Baum</b> = astartige Streben, die nur die kritischen Stellen berühren; spart Material und lässt sich leichter entfernen.</td></tr>
-    <tr><td class="begriff">Schwellenwinkel</td>
-        <td>Ab welcher Neigung gestützt wird. Bei <code>30°</code> gilt: Flächen, die flacher als 30° zur Waagerechten stehen, bekommen Stützen. Kleinerer Wert = weniger Stützen.</td></tr>
-    <tr><td class="begriff">Nur auf Druckplatte</td>
-        <td>Stützen wachsen ausschließlich vom Druckbett nach oben – nie auf dem Objekt selbst. Schont die Oberfläche, funktioniert aber nicht bei jeder Geometrie.</td></tr>
-  </tbody>
-</table>
-
-<div class="box merk">
-  <div class="kopf">Die 45-Grad-Regel</div>
-  <p>Überhänge bis etwa <b>45°</b> zur Senkrechten druckt ein FDM-Drucker in
-  aller Regel ohne Hilfe: Jede Schicht liegt noch weit genug auf der
-  darunterliegenden auf. Erst flachere Überhänge brauchen Stützen. Prüfe
-  deshalb <em>zuerst</em>, ob eine andere Ausrichtung (Kapitel 8) das Problem
-  löst – das ist immer die bessere Lösung.</p>
-</div>
-
-
-<h3 id="f4"><span class="nr">12</span>Schritt 9 – Haftung: Saum und Umrandung</h3>
-
-<p>Löst sich die erste Schicht während des Drucks vom Bett, ist der Druck
-verloren. Zwei Hilfsmittel im Reiter <b>Sonstiges</b> verbessern die Haftung.</p>
-
-<figure class="klein">
-  <img src="bilder/abb17_umrandung.jpg" alt="Reiter Sonstiges mit den Abschnitten Saum und Umrandung">
-  <figcaption><b>Abb. 19:</b> Reiter <b>Sonstiges</b> mit den Abschnitten
-  <b>Saum</b> (Skirt) und <b>Umrandung</b> (Brim).</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:26%">Element</th><th>Funktion</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Saum <span style="font-weight:400">(Skirt)</span></td>
-        <td>Eine oder mehrere Linien, die <b>mit Abstand um</b> das Objekt gezogen werden – sie berühren es nicht. Ihr Zweck: Die Düse wird vor dem eigentlichen Druck „freigespült“ und du siehst sofort, ob der Materialfluss gleichmäßig ist.</td></tr>
-    <tr><td class="begriff">Umrandung <span style="font-weight:400">(Brim)</span></td>
-        <td>Ein flacher Kragen, der <b>direkt am Objekt anliegt</b> und dessen Standfläche vergrößert. Er verhindert, dass sich Ecken beim Abkühlen hochziehen. Nach dem Druck wird er abgeschnitten. <b>Randbreite</b> 5&nbsp;mm ist ein guter Startwert.</td></tr>
-    <tr><td class="begriff">Druckbasis <span style="font-weight:400">(Raft)</span></td>
-        <td>Eine komplette Unterlage, auf der das Objekt gedruckt wird (im Reiter <b>Stützen</b>). Sehr materialintensiv – bei modernen Druckbetten meist unnötig.</td></tr>
-  </tbody>
-</table>
-
-<div class="box info">
-  <div class="kopf">Fachbegriff: Warping</div>
-  <p><b>Warping</b> (engl. „Verziehen“) bezeichnet das Hochziehen der Ecken
-  eines Werkstücks. Ursache: Der Kunststoff schrumpft beim Abkühlen. Die
-  Umrandung wirkt dagegen, weil sie die Kanten am Bett festhält.</p>
-</div>
-
-
-<!-- ==================== TEIL 4: ABSCHLUSS ==================== -->
-
-<h3 id="a1"><span class="nr">13</span>Schritt 10 – Slicen</h3>
-
-<p>Sind alle Einstellungen gesetzt, startest du die Berechnung. Der Slicer
-zerlegt das Modell nun in Schichten und ermittelt für jede Schicht die
-Werkzeugwege.</p>
-
-<figure>
-  <img src="bilder/abb18_slicen_button.jpg" alt="Obere Schaltflächenleiste mit Projekt speichern, Slicing-Einzelscheibe und Fernsteuerung des Drucks">
-  <figcaption><b>Abb. 20:</b> Die Schaltflächen oben rechts. In der Mitte
-  <b>Slicing-Einzelscheibe</b> – damit startest du die Berechnung.</figcaption>
-</figure>
-
-<ul class="schritte">
-  <li>Klicke auf <b>Slicing-Einzelscheibe</b>.</li>
-  <li>Warte, bis die Berechnung durchgelaufen ist. Bei einfachen Objekten
-      dauert das nur Sekunden.</li>
-  <li>Der Slicer wechselt automatisch in den Reiter <b>Vorschau</b>.</li>
-</ul>
-
-<div class="box achtung">
-  <div class="kopf">Wenn das Slicen fehlschlägt</div>
-  <p>Erscheint eine Fehlermeldung, liegt es fast immer an einer dieser
-  Ursachen: Das Objekt steht außerhalb des Bauraums, es überlappt sich mit
-  einem anderen Objekt, oder das Modell ist fehlerhaft (offene Flächen,
-  „nicht wasserdicht“). Lies die Meldung – sie benennt die Ursache meist
-  direkt.</p>
-</div>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – slicen und prüfen</div>
-  <img src="bilder/gif04_slicen_vorschau.gif" alt="Animation: Einstellungen, Slicing-Vorgang, Vorschau, Schichtansicht">
-  <div class="bu">Einstellungen → <b>Slicing</b> → automatischer Wechsel in die
-  <b>Vorschau</b> → Schichtansicht mit dem Regler prüfen.</div>
-</div>
-
-
-<h3 id="a2"><span class="nr">14</span>Schritt 11 – Die Vorschau auswerten</h3>
-
-<p class="lead">Dieser Schritt wird am häufigsten übersprungen – und ist der
-wichtigste. In der Vorschau siehst du genau das, was der Drucker gleich tun
-wird. Fehler, die du hier entdeckst, kosten dich zwei Minuten. Fehler, die du
-erst am Drucker entdeckst, kosten eine Stunde und eine Rolle Filament.</p>
-
-<figure>
-  <img src="bilder/abb19_vorschau.jpg" alt="Vorschauansicht mit farbig dargestelltem Objekt, Legende und Statistik">
-  <figcaption><b>Abb. 21:</b> Der Reiter <b>Vorschau</b>. Rechts die Legende
-  des Farbschemas und die Gesamtschätzung, rechts außen der senkrechte
-  Schichtregler, unten der waagerechte Wegregler.</figcaption>
-</figure>
-
-<h4>Das Farbschema „Linientyp“</h4>
-<p>Jede Farbe steht für eine Aufgabe, die der Druckkopf gerade erledigt. So
-erkennst du auf einen Blick, wofür Zeit und Material verbraucht werden.</p>
-
-<table>
-  <thead><tr><th style="width:26%">Linientyp</th><th>Bedeutung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Außenwand</td><td>Die sichtbare äußerste Konturlinie. Bestimmt maßgeblich die Optik.</td></tr>
-    <tr><td class="begriff">Innere Wand</td><td>Die Wandlinien dahinter. Sorgen für Stabilität.</td></tr>
-    <tr><td class="begriff">Füllung</td><td>Das lockere Gitter im Inneren.</td></tr>
-    <tr><td class="begriff">Innere massive Füllung</td><td>Verdichtete Bereiche unter Deckflächen.</td></tr>
-    <tr><td class="begriff">Obere Oberfläche / Untere Fläche</td><td>Die massiven Deckschichten oben und unten.</td></tr>
-    <tr><td class="begriff">Interne Brücke</td><td>Linien, die frei über einen Hohlraum gespannt werden.</td></tr>
-    <tr><td class="begriff">Eilgang</td><td>Leerfahrten ohne Materialausstoß. Viele Eilgänge bedeuten Zeitverlust und begünstigen Fadenbildung.</td></tr>
-  </tbody>
-</table>
-
-<h4>Den Schichtregler benutzen</h4>
-<figure class="mini">
-  <img src="bilder/abb22_slider.jpg" alt="Senkrechter Schichtregler am rechten Rand mit Schichtnummer und Höhenangabe">
-  <figcaption><b>Abb. 22:</b> Der senkrechte <b>Schichtregler</b>. Die obere
-  Zahl ist die Schichtnummer, darunter steht die zugehörige Höhe in
-  Millimetern.</figcaption>
-</figure>
-<p>Ziehe den Regler nach unten, um in das Objekt hineinzuschauen. So
-kontrollierst du Füllmuster, Wandstärken und Stützen im Inneren. Der
-waagerechte Regler am unteren Rand fährt zusätzlich den Weg <em>innerhalb</em>
-einer einzelnen Schicht ab.</p>
-
-<figure>
-  <img src="bilder/abb21_schicht9.jpg" alt="Schichtansicht mit sichtbarem Gitternetz-Füllmuster, Außenwand und Innenwand in verschiedenen Farben">
-  <figcaption><b>Abb. 23:</b> Blick auf Schicht 9 (Höhe 1,80&nbsp;mm). Deutlich
-  erkennbar: außen die Konturlinien, innen das <b>Gitternetz</b>-Füllmuster
-  mit 15&nbsp;% Dichte.</figcaption>
-</figure>
-
-<h4>Den Schichtaufbau verstehen</h4>
-
-<p>Wenn du den Schichtregler langsam von unten nach oben ziehst, wird der
-gesamte Bauplan des Werkstücks sichtbar. Er folgt immer demselben Aufbau:
-<b>massiver Boden → lockere Füllung → massiver Deckel</b>.</p>
-
-<div class="video">
-  <div class="kopf"><span class="punkt"></span>Ablauf im Bild – Schicht für Schicht durch das Werkstück</div>
-  <img src="bilder/gif05_schichtaufbau.gif" alt="Animation: Schicht 1 massiv, Schicht 4 und 7 mit Gitterfüllung, Schicht 13 massiv, Schicht 20 Deckschicht mit Schriftzug">
-  <div class="bu">Schicht 1 → 4 → 7 → 13 → 20. Beobachte, wie sich die
-  Darstellung von massiv zu Gitter und wieder zu massiv verändert.</div>
-</div>
-
-<table>
-  <thead><tr><th style="width:22%">Schicht</th><th style="width:26%">Was zu sehen ist</th><th>Warum das so ist</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">1 (0,20 mm)</td><td>Vollständig gefüllte Fläche</td>
-        <td>Die <b>unteren Schalenschichten</b> müssen dicht sein – sie bilden den Boden und sorgen für Haftung auf dem Druckbett.</td></tr>
-    <tr><td class="begriff">4 (0,80 mm)</td><td>Gittermuster mit Hohlräumen</td>
-        <td>Der Boden ist fertig, jetzt druckt der Drucker die <b>Füllung</b> mit 15&nbsp;% Dichte. Material und Zeit werden gespart.</td></tr>
-    <tr><td class="begriff">7 (1,40 mm)</td><td>Weiterhin Gittermuster</td>
-        <td>Der mittlere Bereich des Werkstücks. Hier liegt das eigentliche Volumen – und hier wird am meisten gespart.</td></tr>
-    <tr><td class="begriff">13 (2,60 mm)</td><td>Wieder vollständig gefüllt</td>
-        <td>Vorbereitung der Deckfläche: Die <b>innere massive Füllung</b> schafft eine geschlossene Unterlage, damit die Oberseite nicht durchhängt.</td></tr>
-    <tr><td class="begriff">20 (4,00 mm)</td><td>Deckschicht mit sichtbarem Schriftzug</td>
-        <td>Die <b>obere Schalenschicht</b>. Der eingelassene Text erscheint als Aussparung – so entsteht die Gravur.</td></tr>
-  </tbody>
-</table>
-
-<figure>
-  <img src="bilder/abb27a_schicht01.jpg" alt="Schicht 1 vollständig gefüllt">
-  <figcaption><b>Abb. 23a:</b> Schicht 1 – die erste Schicht ist immer massiv.
-  Kontrolliere hier besonders sorgfältig: Zeigt die Vorschau schon Lücken,
-  wird der Druck mit hoher Wahrscheinlichkeit misslingen.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb27d_schicht13.jpg" alt="Schicht 13 wieder vollständig gefüllt">
-  <figcaption><b>Abb. 23b:</b> Schicht 13 – die massive Zwischenlage unter der
-  Deckfläche. Wären es zu wenige solcher Schichten, würde die Oberseite später
-  Löcher zeigen.</figcaption>
-</figure>
-
-<figure>
-  <img src="bilder/abb27e_schicht20.jpg" alt="Oberste Schicht mit sichtbarem Schriftzug">
-  <figcaption><b>Abb. 23c:</b> Schicht 20 – die Deckschicht. Der Schriftzug
-  ist als Aussparung deutlich zu erkennen.</figcaption>
-</figure>
-
-<h4>Die Gesamtschätzung lesen</h4>
-<figure class="mini">
-  <img src="bilder/abb20_statistik.jpg" alt="Legende der Linientypen und Gesamtschätzung mit Filamentverbrauch, Kosten und Druckzeit">
-  <figcaption><b>Abb. 24:</b> Legende und <b>Gesamtschätzung</b>.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:30%">Wert</th><th>Bedeutung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Gesamtfilament</td><td>Verbrauch in Metern und Gramm. Die Grammangabe brauchst du für die Materialabrechnung.</td></tr>
-    <tr><td class="begriff">Kosten</td><td>Rechnerische Materialkosten auf Basis des im Filamentprofil hinterlegten Preises.</td></tr>
-    <tr><td class="begriff">Druckzeit des Modells</td><td>Reine Druckdauer.</td></tr>
-    <tr><td class="begriff">Gesamtdauer</td><td>Druckzeit plus Vorbereitung (Aufheizen, Kalibrieren). <b>Dieser Wert zählt für die Planung.</b></td></tr>
-  </tbody>
-</table>
-
-
-<h3 id="a3"><span class="nr">15</span>Schritt 12 – Die Druckdatei exportieren</h3>
-
-<p>Ist die Vorschau in Ordnung, erzeugst du die Datei für den Drucker.</p>
-
-<figure class="klein">
-  <img src="bilder/abb23_export.jpg" alt="Aufgeklapptes Menü mit den Optionen Fernsteuerung des Drucks, G-Code als Datei exportieren und An Cloud-Datei senden">
-  <figcaption><b>Abb. 25:</b> Das Ausgabe-Menü. Über den kleinen Pfeil links
-  neben der Schaltfläche wählst du zwischen den drei Ausgabewegen.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:34%">Option</th><th>Wann verwenden?</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">G-Code als Datei exportieren</td>
-        <td><b>Der Standardweg im Unterricht.</b> Speichere die Datei auf den USB-Stick bzw. die SD-Karte, die zum Drucker gehört.</td></tr>
-    <tr><td class="begriff">Fernsteuerung des Drucks</td>
-        <td>Direkte Übertragung an einen Drucker im Netzwerk. Nur nach Freigabe durch die Lehrkraft.</td></tr>
-    <tr><td class="begriff">An Cloud-Datei senden</td>
-        <td>Ablage im Anycubic-Cloud-Konto. Im Unterricht nicht erforderlich.</td></tr>
-  </tbody>
-</table>
-
-<div class="box tipp">
-  <div class="kopf">Dateiname mit System</div>
-  <p>Vergib einen Namen, aus dem die wichtigsten Parameter hervorgehen –
-  das erspart später viel Rätselraten:<br>
-  <code>Schluesselanhaenger_PLA_020mm_15Infill_Riegert.gcode</code></p>
-</div>
-
-<div class="box merk">
-  <div class="kopf">Zwei Dateien, zwei Zwecke</div>
-  <ul>
-    <li><b>Projekt speichern</b> (<code>.3mf</code>) → deine <em>bearbeitbare</em>
-        Arbeitsdatei mit allen Einstellungen. Immer zusätzlich speichern!</li>
-    <li><b>G-Code exportieren</b> (<code>.gcode</code>) → die
-        <em>fertige</em> Druckdatei für die Maschine. Nicht mehr sinnvoll
-        änderbar.</li>
-  </ul>
-</div>
-
-
-<h3 id="a4"><span class="nr">16</span>Der Reiter <i>Werkbank</i> – den Drucker verwalten</h3>
-
-<p>Neben <b>Vorbereiten</b> und <b>Vorschau</b> gibt es einen dritten Reiter:
-die <b>Werkbank</b>. Sie hat mit dem Slicen nichts zu tun – hier verwaltest du
-den Drucker selbst, sofern er über das Netzwerk verbunden ist.</p>
-
-<figure>
-  <img src="bilder/abb25_werkbank.jpg" alt="Reiter Werkbank mit Druckauftrag, Print Setting, Kamera, Materialverwaltung, Druckerinformationen und Achsenbewegung">
-  <figcaption><b>Abb. 26:</b> Der Reiter <b>Werkbank</b>. Links die
-  Druckerliste, in der Mitte laufender Auftrag und Live-Einstellungen, rechts
-  Gerätedaten und die Achsensteuerung.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:26%">Bereich</th><th>Funktion</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Druckerliste (links)</td>
-        <td>LAN-Drucker, Cloud-Drucker und Cloud-Dateien. Der Status <code>Offline</code> bedeutet: Der Drucker ist gerade nicht über das Netzwerk erreichbar.</td></tr>
-    <tr><td class="begriff">Druckauftrag</td>
-        <td>Zeigt den gerade laufenden Druck mit Fortschritt und Restzeit.</td></tr>
-    <tr><td class="begriff">Print Setting</td>
-        <td>Live-Werte während des Drucks: <b>Bett-Temperatur</b>, <b>Düsen-Temperatur</b>, <b>Modellüfter</b> und Geschwindigkeitsmodus. Diese Werte lassen sich im laufenden Druck nachregeln.</td></tr>
-    <tr><td class="begriff">Kamera</td>
-        <td>Live-Bild der eingebauten Kamera – nützlich, um einen langen Druck zu beobachten, ohne im Raum zu stehen.</td></tr>
-    <tr><td class="begriff">Materialverwaltung</td>
-        <td>Welches Filament der Drucker gerade gemeldet hat.</td></tr>
-    <tr><td class="begriff">Drucker (rechts)</td>
-        <td>Maschinenmodell, Seriennummer und <b>Firmware-Version</b>. Die Firmware ist die Betriebssoftware des Geräts – bei Problemen ist ihre Versionsnummer die erste Angabe, nach der gefragt wird.</td></tr>
-    <tr><td class="begriff">Achsenbewegung</td>
-        <td>Manuelles Verfahren der Achsen in Schritten von 1, 15 oder 50&nbsp;mm sowie die Referenzfahrt (Home).</td></tr>
-  </tbody>
-</table>
-
-<figure class="klein">
-  <img src="bilder/abb25b_achsen.jpg" alt="Achsensteuerung mit Schrittweiten 1 mm, 15 mm, 50 mm und Warnhinweis">
-  <figcaption><b>Abb. 27:</b> Die Achsensteuerung mit dem Sicherheitshinweis
-  des Programms.</figcaption>
-</figure>
-
-<div class="box achtung">
-  <div class="kopf">Sicherheitsregel</div>
-  <p>Das Programm weist ausdrücklich darauf hin: <b>Bewege die Achsen nur,
-  wenn du direkt vor dem Drucker stehst</b> und den Abstand zwischen Düse und
-  Heizbett im Blick hast. Eine Fehlbedienung kann die Düse in das Druckbett
-  fahren und das Gerät beschädigen. Im Unterricht gilt: Achsenbewegung nur
-  nach Aufforderung durch die Lehrkraft.</p>
-</div>
-
-
-<h3 id="a5"><span class="nr">17</span>Das Menü <i>Kalibrierung</i></h3>
-
-<p><b>Kalibrieren</b> heißt: eine Maschine durch Testdrucke auf das konkret
-verwendete Material einstellen. Der Slicer bringt dafür fertige Testobjekte
-mit. Für den regulären Unterricht brauchst du dieses Menü <em>nicht</em> – die
-mitgelieferten Profile sind bereits abgestimmt. Kennen solltest du es
-trotzdem.</p>
-
-<figure class="klein">
-  <img src="bilder/abb26_kalibrierung.jpg" alt="Menü Kalibrierung mit Temperatur, Durchflussrate, Pressure advance, Rückzugslängen Test, Tolerance Test">
-  <figcaption><b>Abb. 28:</b> Das Menü <b>Kalibrierung</b> in der obersten
-  Menüleiste.</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th style="width:30%">Test</th><th>Was er ermittelt</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Temperatur</td>
-        <td>Druckt einen Turm, dessen Abschnitte mit unterschiedlichen Düsentemperaturen gedruckt werden. Man wählt anschließend die Temperatur mit dem besten Ergebnis.</td></tr>
-    <tr><td class="begriff">Durchflussrate</td>
-        <td>Prüft, ob die tatsächlich geförderte Materialmenge zur berechneten passt. Falscher Durchfluss führt zu rauen oder zu dünnen Oberflächen.</td></tr>
-    <tr><td class="begriff">Pressure advance</td>
-        <td>Gleicht den Druckaufbau in der Düse aus, damit Ecken sauber und nicht ausgebeult werden.</td></tr>
-    <tr><td class="begriff">Rückzugslängen&nbsp;Test</td>
-        <td>Ermittelt, wie weit das Filament vor einer Leerfahrt zurückgezogen werden muss, damit keine Fäden entstehen (<b>Stringing</b>).</td></tr>
-    <tr><td class="begriff">Tolerance Test</td>
-        <td>Druckt Passungen in abgestuften Maßen – so findest du heraus, wie viel Spiel du bei Steckverbindungen einplanen musst.</td></tr>
-  </tbody>
-</table>
-
-<div class="box info">
-  <div class="kopf">Fachbegriff: Toleranz</div>
-  <p>Eine <b>Toleranz</b> ist die zulässige Maßabweichung. Ein 3D-Druck trifft
-  ein Maß nie exakt. Wer eine Bohrung für einen 5-mm-Stift druckt, muss sie
-  deshalb etwas größer zeichnen – typischerweise 0,2&nbsp;bis 0,4&nbsp;mm. Der
-  Tolerance Test liefert den passenden Wert für dein Material.</p>
-</div>
-
-
-<!-- ==================== TEIL 5: MATERIAL ==================== -->
-
-<h3 id="c1"><span class="nr">18</span>Checklisten</h3>
-
-<p>Arbeite diese Listen bei jedem Druckauftrag ab. Die Kästchen lassen sich
-am Bildschirm anklicken.</p>
-
-<h4>Checkliste A – vor dem Slicen</h4>
-<ul class="checkliste">
-  <li><input type="checkbox" id="a1c"><label for="a1c"><b>Druckermodell</b> stimmt mit dem Gerät überein, an dem ich drucke
-      <span class="zusatz">Anycubic Kobra 3 · 0.4 nozzle – Profil endet auf <code>@AC K3</code></span></label></li>
-  <li><input type="checkbox" id="a2c"><label for="a2c"><b>Druckbetttyp</b> entspricht der eingelegten Platte</label></li>
-  <li><input type="checkbox" id="a3c"><label for="a3c"><b>Filament</b> im Slicer = Filament auf der Rolle am Drucker</label></li>
-  <li><input type="checkbox" id="a4c"><label for="a4c"><b>Prozessprofil</b> zur Aufgabe passend gewählt
-      <span class="zusatz">Schichthöhe: fein = schön, grob = schnell</span></label></li>
-  <li><input type="checkbox" id="a5c"><label for="a5c"><b>Objektgröße</b> geprüft – passt in den Bauraum und hat die gewünschten Maße
-      <span class="zusatz">bei Passungen: Loch- und Zapfenmaße nachrechnen</span></label></li>
-  <li><input type="checkbox" id="a5dc"><label for="a5dc"><b>Bauhöhe</b> so klein wie möglich – sie bestimmt die Schichtzahl und damit die Druckdauer</label></li>
-  <li><input type="checkbox" id="a6c"><label for="a6c"><b>Ausrichtung</b> optimiert – größte ebene Fläche nach unten, möglichst wenig Überhänge, Belastungsrichtung bedacht</label></li>
-  <li><input type="checkbox" id="a7c"><label for="a7c"><b>Füllung</b> zum Verwendungszweck passend (Deko 15&nbsp;% / Funktionsteil 25–40&nbsp;%)</label></li>
-  <li><input type="checkbox" id="a8c"><label for="a8c"><b>Stützen</b> nur aktiviert, wenn Überhänge flacher als 45° vorliegen</label></li>
-  <li><input type="checkbox" id="a9c"><label for="a9c"><b>Umrandung</b> gesetzt, falls die Standfläche klein ist oder das Teil dünne Ecken hat</label></li>
-</ul>
-
-<h4>Checkliste B – nach dem Slicen, vor dem Export</h4>
-<ul class="checkliste">
-  <li><input type="checkbox" id="b1c"><label for="b1c"><b>Vorschau</b> geöffnet und mit dem Schichtregler durchgefahren</label></li>
-  <li><input type="checkbox" id="b2c"><label for="b2c"><b>Erste Schicht</b> kontrolliert – vollflächig, keine Lücken</label></li>
-  <li><input type="checkbox" id="b3c"><label for="b3c"><b>Deckschichten</b> kontrolliert – keine Löcher in der Oberseite</label></li>
-  <li><input type="checkbox" id="b4c"><label for="b4c"><b>Stützen</b> sitzen dort, wo sie hingehören – und nirgends sonst</label></li>
-  <li><input type="checkbox" id="b5c"><label for="b5c"><b>Gesamtdauer</b> passt in die verfügbare Zeit</label></li>
-  <li><input type="checkbox" id="b6c"><label for="b6c"><b>Materialverbrauch</b> notiert (für die Abrechnung)</label></li>
-  <li><input type="checkbox" id="b7c"><label for="b7c"><b>Projekt</b> als <code>.3mf</code> gespeichert</label></li>
-  <li><input type="checkbox" id="b8c"><label for="b8c"><b>G-Code</b> mit sprechendem Dateinamen exportiert</label></li>
-</ul>
-
-
-<h3 id="c2"><span class="nr">19</span>Aufgaben</h3>
-
-<p>Löse die folgenden Aufgaben <b>direkt im Slicer</b>. Alle beziehen sich auf
-ein Modell deiner Wahl. Notiere deine Ergebnisse und vergleiche sie
-anschließend mit der Lösung.</p>
-
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 1</span>Schichthöhe und Druckzeit</div>
-  <div class="inhalt">
-    <p>Slice dein Modell nacheinander mit den Prozessprofilen
-    <code>0.28mm Standard</code>, <code>0.20mm Standard</code> und
-    <code>0.12mm Standard</code>. Notiere jeweils die <b>Gesamtdauer</b> aus
-    der Vorschau.</p>
-    <ol>
-      <li>Um welchen Faktor steigt die Druckzeit von 0,28&nbsp;mm auf 0,12&nbsp;mm?</li>
-      <li>Begründe mit einem Satz, warum das so ist.</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Die Druckzeit steigt etwa auf das Zwei- bis Zweieinhalbfache.
-        Die genauen Werte hängen vom Modell ab – entscheidend ist die
-        Größenordnung.</p>
-        <p><b>Zu 2:</b> Bei halber Schichthöhe braucht der Drucker für dieselbe
-        Objekthöhe etwa doppelt so viele Schichten. Jede Schicht kostet Zeit,
-        also verdoppelt sich die Druckdauer näherungsweise.</p>
-      </div>
-    </details>
+  <h1>
+    <span class="thin" id="scramble">Anycubic Slicer Next</span>
+    Vom 3D-Modell zur druckfertigen Datei
+  </h1>
+
+  <p class="claim">
+    Das interaktive Schülerhandbuch des BKWI: Schritt für Schritt vom Import über
+    Wandstärke, Füllmuster und Stützen bis zum fertigen G-Code – mit echten
+    Screenshots, Animationen und Messwerten aus dem Labor.
+  </p>
+
+  <div class="cta">
+    <a class="start" id="startBtn" href="anleitung.html">
+      Start Learning
+      <span class="arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M13.3 5.3 11.9 6.7l4.3 4.3H4v2h12.2l-4.3 4.3 1.4 1.4L20 12z"/></svg>
+      </span>
+    </a>
+    <p class="hint">Oder <kbd>Enter</kbd> drücken</p>
   </div>
-</div>
 
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 2</span>Füllung sichtbar machen</div>
-  <div class="inhalt">
-    <p>Stelle im Reiter <b>Struktur</b> die <b>Fülldichte</b> auf
-    <code>15&nbsp;%</code> und das <b>Füllmuster</b> auf <code>Gitternetz</code>.
-    Slice das Modell und ziehe in der Vorschau den senkrechten Schichtregler
-    auf etwa die halbe Objekthöhe.</p>
-    <ol>
-      <li>Beschreibe, was du siehst.</li>
-      <li>Wechsle auf <code>Gyroid</code> und slice erneut. Was verändert sich?</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Sichtbar ist ein regelmäßiges Rautengitter im Inneren,
-        umschlossen von den farblich abgesetzten Wandlinien. Zwischen den
-        Gitterlinien liegen Hohlräume – das Objekt ist innen nicht massiv.</p>
-        <p><b>Zu 2:</b> Beim Gyroid verlaufen die Linien geschwungen statt
-        geradlinig. Das Muster ist in alle Raumrichtungen gleich stabil,
-        braucht aber meist etwas mehr Druckzeit bei gleichem Materialeinsatz.</p>
-      </div>
-    </details>
+  <div class="stats">
+    <div class="stat"><b data-count="21">21</b><span>Kapitel</span></div>
+    <div class="stat"><b data-count="49">49</b><span>Abbildungen</span></div>
+    <div class="stat"><b data-count="7">7</b><span>Animationen</span></div>
+    <div class="stat"><b data-count="6">6</b><span>Lernbereiche</span></div>
   </div>
-</div>
 
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 3</span>Ausrichtung statt Stützmaterial</div>
-  <div class="inhalt">
-    <p>Drehe dein Modell mit dem Werkzeug <b>Drehen</b> um <code>90°</code> um
-    die X-Achse, sodass es hochkant steht. Aktiviere <em>keine</em> Stützen und
-    slice.</p>
-    <ol>
-      <li>Was meldet der Slicer bzw. wie sieht die Vorschau aus?</li>
-      <li>Formuliere eine Regel, die sich daraus für die Praxis ableiten lässt.</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Je nach Modell entstehen Überhänge, die in der Luft
-        beginnen. In der Vorschau sind dort Linien zu sehen, die auf nichts
-        aufliegen – im Druck würden sie herunterhängen. Zusätzlich wird das
-        Objekt instabil, weil die Standfläche klein ist.</p>
-        <p><b>Zu 2:</b> Mögliche Formulierung: <em>„Die Ausrichtung wird zuerst
-        optimiert, Stützmaterial ist nur die zweite Wahl.“</em> Eine gute
-        Ausrichtung spart Material, Zeit und Nacharbeit.</p>
-      </div>
-    </details>
+  <div class="chips">
+    <span class="chip">Grundlagen</span>
+    <span class="chip">Der Arbeitsablauf</span>
+    <span class="chip">Feineinstellungen</span>
+    <span class="chip">Abschluss</span>
+    <span class="chip">Drucker &amp; Gerät</span>
+    <span class="chip">Material</span>
   </div>
-</div>
-
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 3b</span>Größe verändern und die Folgen messen</div>
-  <div class="inhalt">
-    <p>Slice dein Modell bei <code>100&nbsp;%</code> und notiere Filamentmenge
-    und Gesamtdauer. Skaliere es dann auf <code>200&nbsp;%</code> und slice
-    erneut.</p>
-    <ol>
-      <li>Um welchen Faktor steigt der Filamentverbrauch?</li>
-      <li>Warum steigt er nicht auf das Achtfache, obwohl sich das Volumen verachtfacht?</li>
-      <li>Färbe das Modell zum Schluss orange ein. Ändert sich dadurch irgendein Wert in der Statistik?</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Etwa das Fünf- bis Sechsfache. In unserer Messung
-        (100&nbsp;% → 214&nbsp;%) stieg der Verbrauch von 3,40&nbsp;g auf
-        20,69&nbsp;g, also auf das 6,1-Fache.</p>
-        <p><b>Zu 2:</b> Weil das Objekt innen nicht massiv ist. Wände und
-        Deckschichten wachsen nur mit der Fläche (quadratisch), lediglich die
-        Füllung wächst mit dem Volumen (kubisch). Bei 100&nbsp;% Fülldichte
-        käme man tatsächlich auf etwa das Achtfache.</p>
-        <p><b>Zu 3:</b> Nein. Die Farbe ist reine Anzeige im Slicer und
-        verändert weder Material noch Zeit noch Kosten. Gedruckt wird in der
-        Farbe des eingelegten Filaments.</p>
-      </div>
-    </details>
-  </div>
-</div>
-
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 3c</span>Stützmaterial provozieren</div>
-  <div class="inhalt">
-    <p>Aktiviere im Reiter <b>Stützen</b> die Option
-    <b>Stützstrukturen aktivieren</b> und slice dein flach liegendes Modell.
-    Kippe es anschließend mit dem Drehwerkzeug um etwa <code>45°</code> und
-    slice erneut.</p>
-    <ol>
-      <li>Erscheint beim flach liegenden Modell die Zeile <b>Stützen</b> in der Legende? Begründe.</li>
-      <li>Wie viele Schichten hat das gekippte Modell – und woran liegt das?</li>
-      <li>Wie viel Gramm Material wandern beim gekippten Modell in den Müll?</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Nein. Der Haken erlaubt Stützen nur – gebaut werden sie
-        ausschließlich dort, wo Überhänge flacher als der Schwellenwinkel
-        (30°) auftreten. Ein flach liegendes Teil hat keine solchen Stellen.</p>
-        <p><b>Zu 2:</b> In unserer Messung 272 statt 20 Schichten. Durch das
-        Kippen wuchs die Bauhöhe von 4,1&nbsp;mm auf 54,6&nbsp;mm; die
-        Schichthöhe blieb bei 0,2&nbsp;mm. 54,6&nbsp;÷&nbsp;0,2&nbsp;≈&nbsp;273.</p>
-        <p><b>Zu 3:</b> Die Differenz aus <b>Gesamtfilament</b> und
-        <b>Modellfilament</b> – bei uns 5,35&nbsp;g − 4,28&nbsp;g =
-        <b>1,07&nbsp;g</b>, also rund 20&nbsp;% des gesamten Materials.</p>
-      </div>
-    </details>
-  </div>
-</div>
-
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 4</span>Fachbegriffe zuordnen</div>
-  <div class="inhalt">
-    <p>Ordne den Begriffen die passende Erklärung zu – ohne im Glossar
-    nachzusehen.</p>
-    <ol>
-      <li>Brim</li>
-      <li>Infill</li>
-      <li>Perimeter</li>
-      <li>Warping</li>
-      <li>G-Code</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Brim</b> – flacher Kragen um das Objekt zur Verbesserung der
-        Bettháftung &middot; <b>Infill</b> – Gitterwerk im Objektinneren &middot;
-        <b>Perimeter</b> – umlaufende Wandlinie &middot;
-        <b>Warping</b> – Hochziehen der Ecken beim Abkühlen &middot;
-        <b>G-Code</b> – Steuerbefehle für den Drucker, Ergebnis des Slicens.</p>
-      </div>
-    </details>
-  </div>
-</div>
-
-
-<div class="aufgabe">
-  <div class="titel"><span class="label">Aufgabe 5</span>Schichtaufbau untersuchen</div>
-  <div class="inhalt">
-    <p>Slice ein Modell und fahre in der Vorschau mit dem senkrechten
-    Schichtregler von Schicht&nbsp;1 bis zur obersten Schicht.</p>
-    <ol>
-      <li>Notiere, bei welcher Schichtnummer das Bild von <em>massiv</em> auf
-          <em>Gitter</em> wechselt – und wo es wieder massiv wird.</li>
-      <li>Erkläre, warum der Drucker unten und oben massiv druckt, in der
-          Mitte aber nicht.</li>
-    </ol>
-    <details>
-      <summary>Lösung anzeigen</summary>
-      <div class="loesung">
-        <p><b>Zu 1:</b> Die Umschaltpunkte entsprechen den eingestellten
-        Schalenschichten. Bei 3 unteren Schalenschichten beginnt die Füllung
-        ab Schicht&nbsp;4; bei 5 oberen Schalenschichten wird es die letzten
-        fünf Schichten vor dem Ende wieder massiv (plus die massiven
-        Vorbereitungsschichten darunter).</p>
-        <p><b>Zu 2:</b> Boden und Deckel müssen geschlossen sein – sie sind
-        sichtbar, tragen die Belastung und müssen auf dem Druckbett haften.
-        Im Inneren ist eine geschlossene Fläche nicht nötig; dort genügt ein
-        Gitter, das die Deckschichten trägt. Das spart Material, Zeit und
-        Gewicht.</p>
-      </div>
-    </details>
-  </div>
-</div>
-
-<h3 id="c3"><span class="nr">20</span>Typische Fehlerbilder und ihre Ursache</h3>
-
-<table>
-  <thead><tr><th style="width:28%">Beobachtung</th><th style="width:36%">Wahrscheinliche Ursache</th><th>Was du im Slicer tun kannst</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Objekt löst sich vom Bett</td>
-        <td>Zu kleine Standfläche, Warping, Bett nicht sauber</td>
-        <td><b>Umrandung</b> aktivieren, Randbreite auf 5–8&nbsp;mm; Objekt flacher ausrichten</td></tr>
-    <tr><td class="begriff">Löcher in der Oberseite</td>
-        <td>Zu wenige obere Schalenschichten oder zu geringe Fülldichte</td>
-        <td><b>Obere Schalenschichten</b> auf 5 erhöhen, Fülldichte auf 20&nbsp;% anheben</td></tr>
-    <tr><td class="begriff">Überhänge hängen durch</td>
-        <td>Überhangwinkel flacher als 45°, keine Stützen</td>
-        <td>Objekt umorientieren; wenn das nicht reicht, <b>Stützen</b> aktivieren (Typ <i>Baum</i>)</td></tr>
-    <tr><td class="begriff">Feine Fäden zwischen Bauteilen</td>
-        <td>Materialnachlauf bei Leerfahrten („Stringing“)</td>
-        <td>Weniger Eilgänge durch bessere Anordnung; im Filamentprofil den Rückzug prüfen</td></tr>
-    <tr><td class="begriff">Bauteil bricht entlang der Schichten</td>
-        <td>Belastung wirkt quer zur Schichtrichtung</td>
-        <td>Objekt um 90° drehen; <b>Wandschleifen</b> von 2 auf 3–4 erhöhen</td></tr>
-    <tr><td class="begriff">Slicen bricht mit Fehler ab</td>
-        <td>Objekt außerhalb des Bauraums, Überlappung oder defektes Modell</td>
-        <td>Objektgröße und Position prüfen; Modell in der Ursprungssoftware reparieren</td></tr>
-  </tbody>
-</table>
-
-
-<h3 id="c4"><span class="nr">21</span>Glossar</h3>
-
-<table>
-  <thead><tr><th style="width:24%">Begriff</th><th>Erklärung</th></tr></thead>
-  <tbody>
-    <tr><td class="begriff">Bauhöhe</td><td>Höhe des Objekts in Z-Richtung. Bestimmt die Anzahl der Schichten und damit maßgeblich die Druckdauer.</td></tr>
-    <tr><td class="begriff">Bauraum</td><td>Der Bereich, in dem der Drucker arbeiten kann (Länge × Breite × Höhe). Was nicht hineinpasst, kann nicht gedruckt werden. Kobra 3: 250 × 250 × 260&nbsp;mm.</td></tr>
-    <tr><td class="begriff">Brim / Umrandung</td><td>Flacher Kragen direkt am Objekt, der die Standfläche vergrößert und so die Haftung verbessert.</td></tr>
-    <tr><td class="begriff">Düse / Nozzle</td><td>Austrittsöffnung am Druckkopf. Der Durchmesser (meist 0,4&nbsp;mm) begrenzt die Detailfeinheit.</td></tr>
-    <tr><td class="begriff">Eilgang</td><td>Bewegung des Druckkopfes ohne Materialausstoß. Kostet Zeit und kann Fäden ziehen.</td></tr>
-    <tr><td class="begriff">Extruder</td><td>Baugruppe, die das Filament vorschiebt und dem Hotend zuführt.</td></tr>
-    <tr><td class="begriff">FDM</td><td>Fused Deposition Modeling – Schmelzschichtverfahren. Das Druckverfahren unserer Geräte.</td></tr>
-    <tr><td class="begriff">Filament</td><td>Kunststoffdraht auf der Rolle, üblicherweise 1,75&nbsp;mm Durchmesser.</td></tr>
-    <tr><td class="begriff">Firmware</td><td>Die Betriebssoftware im Drucker selbst. Ihre Versionsnummer steht im Reiter <i>Werkbank</i>.</td></tr>
-    <tr><td class="begriff">G-Code</td><td>Steuerbefehle für den Drucker. Ergebnis des Slicens und die Datei, die auf die Maschine kommt.</td></tr>
-    <tr><td class="begriff">Hotend</td><td>Der beheizte Teil des Druckkopfs, in dem das Filament geschmolzen wird.</td></tr>
-    <tr><td class="begriff">Infill / Füllung</td><td>Gitterwerk im Inneren des Objekts. Angabe in Prozent (Fülldichte) und als Muster.</td></tr>
-    <tr><td class="begriff">Kalibrierung</td><td>Einstellen der Maschine auf ein bestimmtes Material mithilfe von Testdrucken.</td></tr>
-    <tr><td class="begriff">Perimeter / Wandschleife</td><td>Eine umlaufende Konturlinie der Außenwand. Mehr Perimeter = stabileres Bauteil.</td></tr>
-    <tr><td class="begriff">PEI</td><td>Kunststoffbeschichtung der Druckplatte, die im warmen Zustand haftet und beim Abkühlen loslässt.</td></tr>
-    <tr><td class="begriff">PLA</td><td>Polylactid, Standardfilament. Einfach zu drucken, formstabil, nicht hitzebeständig.</td></tr>
-    <tr><td class="begriff">Prozessprofil</td><td>Gespeichertes Paket aus mehreren hundert Druckparametern.</td></tr>
-    <tr><td class="begriff">Quadrat-Würfel-Gesetz</td><td>Beim Skalieren wächst die Fläche im Quadrat, das Volumen in der dritten Potenz des Längenfaktors. Erklärt, warum größere Drucke überproportional viel Material und Zeit kosten.</td></tr>
-    <tr><td class="begriff">RGB</td><td>Farbmodell aus Rot, Grün und Blau mit Werten von 0 bis 255. Wird im Farbwähler des Slicers verwendet.</td></tr>
-    <tr><td class="begriff">Raft / Druckbasis</td><td>Vollflächige Unterlage unter dem Objekt. Sehr materialintensiv, heute selten nötig.</td></tr>
-    <tr><td class="begriff">Rückzug / Retraction</td><td>Kurzes Zurückziehen des Filaments vor einer Leerfahrt, damit kein Material nachläuft.</td></tr>
-    <tr><td class="begriff">Schichthöhe</td><td>Dicke einer einzelnen gedruckten Schicht. Bestimmt Oberflächenqualität und Druckdauer.</td></tr>
-    <tr><td class="begriff">Skalieren</td><td>Vergrößern oder Verkleinern eines Objekts ohne Formänderung. Angabe in Prozent oder als Zielmaß in Millimetern.</td></tr>
-    <tr><td class="begriff">Skirt / Saum</td><td>Linie mit Abstand um das Objekt. Spült die Düse frei und zeigt den Materialfluss.</td></tr>
-    <tr><td class="begriff">Slicen</td><td>Das Zerlegen des 3D-Modells in Schichten und das Berechnen der Werkzeugwege.</td></tr>
-    <tr><td class="begriff">STL</td><td>Dateiformat für 3D-Modelle. Beschreibt nur die Oberfläche als Dreiecksnetz.</td></tr>
-    <tr><td class="begriff">Stützstruktur / Support</td><td>Mitgedrucktes Hilfsgerüst unter Überhängen. Wird nach dem Druck entfernt.</td></tr>
-    <tr><td class="begriff">Stringing</td><td>Feine Kunststofffäden zwischen Bauteilen, verursacht durch nachlaufendes Material.</td></tr>
-    <tr><td class="begriff">Toleranz</td><td>Zulässige Maßabweichung. Beim 3D-Druck muss sie bei Passungen bewusst eingeplant werden.</td></tr>
-    <tr><td class="begriff">3MF</td><td>Modernes Projektformat. Speichert Geometrie <em>und</em> alle Einstellungen.</td></tr>
-    <tr><td class="begriff">Warping</td><td>Hochziehen der Ecken durch Schrumpfen beim Abkühlen.</td></tr>
-  </tbody>
-</table>
-
-<div class="box gut" style="margin-top:44px">
-  <div class="kopf">Und jetzt?</div>
-  <p>Wenn du diese Anleitung einmal komplett durchgearbeitet hast, kennst du
-  den gesamten Weg vom Modell zur Druckdatei. Alles Weitere – Temperaturen,
-  Geschwindigkeiten, Rückzugswerte – baut darauf auf und wird erst dann
-  interessant, wenn die Grundlagen sitzen.</p>
-</div>
 
 </main>
-</div>
 
-<footer>
-  <span>Kolping Bildung</span>
-  <span>Riegert</span>
-  <span>Anycubic Slicer Next &middot; BKWI</span>
+<footer class="foot">
+  <span>&copy; Kolping Bildung &middot; BKWI</span>
+  <span class="rechts"><a href="anleitung.html">Direkt zum Inhaltsverzeichnis</a></span>
 </footer>
 
 <script>
 (function(){
-  var feld   = document.getElementById('sucheFeld');
-  var liste  = document.getElementById('trefferListe');
-  var leeren = document.getElementById('sucheLeeren');
-  var main   = document.querySelector('main');
-  if(!feld || !main) return;
+  'use strict';
+  var wenigerBewegung = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* --- Index aufbauen ------------------------------------------------- */
-  /* Umlaute vereinheitlichen - die Laenge bleibt erhalten, damit die
-     Fundstelle im Originaltext an derselben Position sitzt.            */
-  function normal(s){
-    return s.toLowerCase()
-            .replace(/\u00e4/g,'a').replace(/\u00f6/g,'o').replace(/\u00fc/g,'u')
-            .replace(/\u00df/g,'s').replace(/\u00a0/g,' ');
+  /* ============================================================
+     1) Sound – vollständig synthetisiert, keine Audiodateien
+     ============================================================ */
+  var ctx = null, an = localStorage.getItem('bkwi-sound') !== 'aus';
+  var btn = document.getElementById('soundBtn');
+
+  function setzeSchalter(){
+    btn.classList.toggle('muted', !an);
+    btn.setAttribute('aria-pressed', an ? 'true' : 'false');
   }
-  /* Zusatzvariante: erlaubt auch die Schreibweisen ae / oe / ue / ss   */
-  function normalAlt(s){
-    return normal(s).replace(/ae/g,'a').replace(/oe/g,'o')
-                    .replace(/ue/g,'u').replace(/ss/g,'s');
+  setzeSchalter();
+
+  function audio(){
+    if(!an) return null;
+    if(!ctx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      ctx = new AC();
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return ctx;
   }
 
-  var index = [];
-  var kapitel = '';
-  var lfd = 0;
-  var knoten = main.querySelectorAll('h3, h4, h5, p, li, td, figcaption, .kopf, summary');
+  /* Ein einzelner Ton mit Hüllkurve */
+  function ton(o){
+    var c = audio(); if(!c) return;
+    var t0 = c.currentTime + (o.delay || 0);
+    var osz = c.createOscillator(), gain = c.createGain();
+    osz.type = o.typ || 'sine';
+    osz.frequency.setValueAtTime(o.von, t0);
+    if(o.bis) osz.frequency.exponentialRampToValueAtTime(o.bis, t0 + o.dauer);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(o.laut || 0.09, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dauer);
+    osz.connect(gain); gain.connect(c.destination);
+    osz.start(t0); osz.stop(t0 + o.dauer + 0.03);
+  }
 
-  knoten.forEach(function(el){
-    if(el.tagName === 'H3'){
-      var nr = el.querySelector('.nr');
-      var titel = el.textContent.replace(/\s+/g,' ').trim();
-      if(nr){
-        var n = nr.textContent.trim();
-        titel = 'Kapitel ' + n + ' \u00b7 ' + titel.slice(n.length).trim();
-      }
-      kapitel = titel;
+  /* Rauschsweep für den Start */
+  function rauschen(dauer, laut){
+    var c = audio(); if(!c) return;
+    var t0 = c.currentTime;
+    var laenge = Math.floor(c.sampleRate * dauer);
+    var puffer = c.createBuffer(1, laenge, c.sampleRate);
+    var daten = puffer.getChannelData(0);
+    for(var i = 0; i < laenge; i++){
+      daten[i] = (Math.random() * 2 - 1) * (1 - i / laenge);
     }
-    var t = el.textContent.replace(/\s+/g,' ').trim();
-    if(el.tagName === 'H3'){
-      var nr2 = el.querySelector('.nr');
-      if(nr2) t = t.slice(nr2.textContent.trim().length).trim();
+    var quelle = c.createBufferSource(); quelle.buffer = puffer;
+    var filter = c.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(420, t0);
+    filter.frequency.exponentialRampToValueAtTime(5200, t0 + dauer);
+    filter.Q.value = 1.4;
+    var gain = c.createGain();
+    gain.gain.setValueAtTime(laut || 0.05, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dauer);
+    quelle.connect(filter); filter.connect(gain); gain.connect(c.destination);
+    quelle.start(t0); quelle.stop(t0 + dauer);
+  }
+
+  var sound = {
+    hover:  function(){ ton({von:760, bis:1240, dauer:0.07, laut:0.05, typ:'triangle'}); },
+    klick:  function(){ ton({von:520, bis:300,  dauer:0.09, laut:0.06, typ:'square'}); },
+    start:  function(){
+      rauschen(0.75, 0.055);
+      ton({von:180, bis:900,  dauer:0.55, laut:0.10, typ:'sawtooth'});
+      ton({von:440, dauer:0.5,  laut:0.07, typ:'sine',     delay:0.10});
+      ton({von:659, dauer:0.5,  laut:0.06, typ:'sine',     delay:0.18});
+      ton({von:880, dauer:0.55, laut:0.07, typ:'triangle', delay:0.26});
+      ton({von:1319,dauer:0.6,  laut:0.05, typ:'sine',     delay:0.34});
     }
-    if(t.length < 3) return;
-    if(el.querySelector('h3, h4, h5, p, li, td')) return;   /* keine Container */
-    index.push({ el: el, text: t, kap: kapitel || 'Einleitung',
-                 low: normal(t), alt: normalAlt(t), pos: lfd++ });
+  };
+
+  btn.addEventListener('click', function(){
+    an = !an;
+    localStorage.setItem('bkwi-sound', an ? 'an' : 'aus');
+    setzeSchalter();
+    if(an) sound.hover();
   });
 
-  function escHtml(s){
-    return s.replace(/[&<>"]/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
-    });
+  /* ============================================================
+     2) Start-Sequenz
+     ============================================================ */
+  var start = document.getElementById('startBtn');
+  var laeuft = false;
+
+  function losGehts(ev){
+    if(laeuft) return;
+    if(ev) ev.preventDefault();
+    laeuft = true;
+    sound.start();
+    document.body.classList.add('launch');
+    var wartezeit = wenigerBewegung ? 60 : 620;
+    setTimeout(function(){ window.location.href = 'anleitung.html'; }, wartezeit);
   }
 
-  /* Ausschnitt um die Fundstelle, Suchwort hervorgehoben */
-  function schnipsel(eintrag, q, qa){
-    var pos = eintrag.low.indexOf(q), len = q.length;
-    if(pos < 0){ pos = eintrag.alt.indexOf(qa); len = qa.length; }
-    if(pos < 0){ pos = 0; len = 0; }
-    var von = Math.max(0, pos - 45);
-    var bis = Math.min(eintrag.text.length, pos + len + 95);
-    var roh = eintrag.text.slice(von, bis);
-    var relPos = pos - von;
-    var html;
-    if(len > 0 && relPos >= 0 && relPos + len <= roh.length){
-      html = escHtml(roh.slice(0, relPos)) +
-             '<mark>' + escHtml(roh.slice(relPos, relPos + len)) + '</mark>' +
-             escHtml(roh.slice(relPos + len));
-    } else {
-      html = escHtml(roh);
-    }
-    return (von > 0 ? '\u2026 ' : '') + html + (bis < eintrag.text.length ? ' \u2026' : '');
-  }
+  start.addEventListener('click', losGehts);
+  start.addEventListener('mouseenter', function(){ sound.hover(); });
 
-  var aktuelle = [];
-  var markiert = -1;
-
-  function suchen(){
-    var q  = normal(feld.value.trim());
-    var qa = normalAlt(feld.value.trim());
-    leeren.style.display = feld.value ? 'block' : 'none';
-
-    if(q.length < 2){ liste.classList.remove('offen'); liste.innerHTML=''; return; }
-
-    /* Ueberschriften zuerst, danach in Dokumentreihenfolge */
-    var funde = index.filter(function(e){
-      return e.low.indexOf(q) > -1 || e.alt.indexOf(qa) > -1;
-    });
-    funde.sort(function(a,b){
-      var ah = /^H[345]$/.test(a.el.tagName) ? 0 : 1;
-      var bh = /^H[345]$/.test(b.el.tagName) ? 0 : 1;
-      if(ah !== bh) return ah - bh;
-      return a.pos - b.pos;
-    });
-    funde = funde.slice(0, 25);
-    aktuelle = funde; markiert = -1;
-
-    if(!funde.length){
-      liste.innerHTML = '<div class="nix">Kein Treffer f\u00fcr \u201e' +
-        escHtml(feld.value.trim()) + '\u201c. Tipp: Auch der englische Begriff hilft ' +
-        '(z.&nbsp;B. <i>Brim</i> statt <i>Umrandung</i>).</div>';
-      liste.classList.add('offen');
-      return;
-    }
-
-    var html = '<div class="kopfzeile">' + funde.length +
-               (funde.length === 1 ? ' Treffer' : ' Treffer') +
-               ' &middot; Enter springt zum ersten</div>';
-    funde.forEach(function(e, i){
-      html += '<button class="t" data-i="' + i + '" role="option">' +
-              '<span class="kap">' + escHtml(e.kap) + '</span>' +
-              '<span class="txt">' + schnipsel(e, q, qa) + '</span></button>';
-    });
-    liste.innerHTML = html;
-    liste.classList.add('offen');
-
-    liste.querySelectorAll('button.t').forEach(function(b){
-      b.addEventListener('click', function(){ springe(+b.dataset.i); });
-    });
-  }
-
-  function springe(i){
-    var e = aktuelle[i];
-    if(!e) return;
-    liste.classList.remove('offen');
-    var ziel = e.el;
-    ziel.scrollIntoView({behavior:'smooth', block:'center'});
-    document.querySelectorAll('.fundstelle').forEach(function(x){
-      x.classList.remove('fundstelle');
-    });
-    /* kleine Verzögerung, damit die Animation nach dem Scrollen sichtbar ist */
-    setTimeout(function(){ ziel.classList.add('fundstelle'); }, 350);
-    setTimeout(function(){ ziel.classList.remove('fundstelle'); }, 3200);
-  }
-
-  function markiere(n){
-    var btns = liste.querySelectorAll('button.t');
-    if(!btns.length) return;
-    if(markiert > -1 && btns[markiert]) btns[markiert].classList.remove('aktiv');
-    markiert = (n + btns.length) % btns.length;
-    btns[markiert].classList.add('aktiv');
-    btns[markiert].scrollIntoView({block:'nearest'});
-  }
-
-  feld.addEventListener('input', suchen);
-  feld.addEventListener('focus', function(){ if(feld.value.trim().length>1) suchen(); });
-
-  feld.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter'){ ev.preventDefault(); springe(markiert > -1 ? markiert : 0); }
-    else if(ev.key === 'ArrowDown'){ ev.preventDefault(); markiere(markiert + 1); }
-    else if(ev.key === 'ArrowUp'){   ev.preventDefault(); markiere(markiert - 1); }
-    else if(ev.key === 'Escape'){ feld.value=''; suchen(); feld.blur(); }
-  });
-
-  leeren.addEventListener('click', function(){ feld.value=''; suchen(); feld.focus(); });
-
-  document.addEventListener('click', function(ev){
-    if(!ev.target.closest('.suche')) liste.classList.remove('offen');
-  });
-
-  /* Strg+F bzw. / öffnet die Suche der Anleitung */
+  /* Enter oder Leertaste starten die Anleitung – passend zur Enter-Taste im Logo */
   document.addEventListener('keydown', function(ev){
-    var tippt = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-    if((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'f'){
-      ev.preventDefault(); feld.focus(); feld.select();
-    } else if(ev.key === '/' && !tippt){
-      ev.preventDefault(); feld.focus();
-    }
+    var tippt = /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(document.activeElement.tagName);
+    if((ev.key === 'Enter' || ev.key === ' ') && !tippt){ losGehts(ev); }
   });
+
+  /* Klick auf das Logo startet ebenfalls */
+  document.getElementById('logowrap').addEventListener('click', losGehts);
+
+  document.querySelectorAll('.chip, .iconbtn').forEach(function(el){
+    el.addEventListener('mouseenter', function(){ sound.hover(); });
+  });
+
+  /* ============================================================
+     3) Logo folgt der Maus (3D-Neigung)
+     ============================================================ */
+  if(!wenigerBewegung && window.matchMedia('(hover:hover)').matches){
+    var logo = document.getElementById('logo3d');
+    window.addEventListener('mousemove', function(ev){
+      var x = (ev.clientX / window.innerWidth  - 0.5);
+      var y = (ev.clientY / window.innerHeight - 0.5);
+      logo.style.setProperty('--ry', (x * 17).toFixed(2) + 'deg');
+      logo.style.setProperty('--rx', (-y * 11).toFixed(2) + 'deg');
+    }, {passive:true});
+  }
+
+  /* ============================================================
+     4) Zahlen hochzählen
+     ============================================================ */
+  if(!wenigerBewegung) document.querySelectorAll('.stat b').forEach(function(el){
+    var ziel = parseInt(el.dataset.count, 10), schritt = 0;
+    el.textContent = '0';
+    var dauer = 1100, beginn = performance.now() + 900;
+    function tick(jetzt){
+      if(jetzt < beginn){ requestAnimationFrame(tick); return; }
+      var p = Math.min(1, (jetzt - beginn) / dauer);
+      schritt = Math.round(ziel * (1 - Math.pow(1 - p, 3)));
+      el.textContent = schritt;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+
+  /* ============================================================
+     5) Titel "entschlüsseln"
+     ============================================================ */
+  (function(){
+    var el = document.getElementById('scramble');
+    var ziel = el.textContent, zeichen = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&/*+<>';
+    if(wenigerBewegung) return;
+    var runde = 0;
+    var timer = setInterval(function(){
+      el.textContent = ziel.split('').map(function(z, i){
+        if(z === ' ') return ' ';
+        if(i < runde) return z;
+        return zeichen[Math.floor(Math.random() * zeichen.length)];
+      }).join('');
+      runde += 0.7;
+      if(runde >= ziel.length){ clearInterval(timer); el.textContent = ziel; }
+    }, 38);
+  })();
+
+  /* ============================================================
+     6) Partikel – aufsteigende Druckschicht-Funken
+     ============================================================ */
+  (function(){
+    if(wenigerBewegung) return;
+    var cv = document.getElementById('fx'), c2 = cv.getContext('2d');
+    var b = 0, h = 0, teile = [], dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function messen(){
+      b = window.innerWidth; h = window.innerHeight;
+      cv.width = b * dpr; cv.height = h * dpr;
+      c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var anzahl = Math.round(Math.min(110, b / 12));
+      teile = [];
+      for(var i = 0; i < anzahl; i++) teile.push(neu(true));
+    }
+    function neu(zufaellig){
+      return {
+        x: Math.random() * b,
+        y: zufaellig ? Math.random() * h : h + 12,
+        r: Math.random() * 1.9 + 0.5,
+        v: Math.random() * 0.55 + 0.18,
+        s: Math.random() * 0.55 + 0.25,
+        w: Math.random() * Math.PI * 2,
+        o: Math.random() * 0.5 + 0.22
+      };
+    }
+    function zeichnen(){
+      c2.clearRect(0, 0, b, h);
+      for(var i = 0; i < teile.length; i++){
+        var t = teile[i];
+        t.y -= t.v; t.w += 0.014;
+        var x = t.x + Math.sin(t.w) * 14;
+        c2.beginPath();
+        c2.arc(x, t.y, t.r, 0, Math.PI * 2);
+        c2.fillStyle = 'rgba(168,255,0,' + t.o + ')';
+        c2.shadowBlur = 9; c2.shadowColor = 'rgba(168,255,0,.75)';
+        c2.fill();
+        if(t.y < -14) teile[i] = neu(false);
+      }
+      requestAnimationFrame(zeichnen);
+    }
+    messen();
+    window.addEventListener('resize', messen);
+    requestAnimationFrame(zeichnen);
+  })();
 })();
 </script>
 

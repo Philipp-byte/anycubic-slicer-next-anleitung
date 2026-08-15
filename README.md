@@ -84,23 +84,29 @@ keine Internetverbindung nötig.
 - **Online:** über GitHub Pages (Link oben).
 - **Offline:** Repository als ZIP herunterladen, entpacken,
   `index.html` im Browser öffnen.
-- **Moodle:** `index.html` und den Ordner `bilder` gemeinsam als ZIP
-  hochladen und als Verzeichnis entpacken lassen.
-- **Ausdruck:** im Browser `Strg` + `P`.
+- **Moodle:** `index.html`, `anleitung.html` und den Ordner `bilder`
+  gemeinsam als ZIP hochladen und als Verzeichnis entpacken lassen.
+- **Ausdruck:** `anleitung.html` öffnen, dann `Strg` + `P`.
 
-> **Wichtig:** Der Ordner `bilder` muss immer neben der `index.html` liegen,
+> **Wichtig:** Der Ordner `bilder` muss immer neben den HTML-Dateien liegen,
 > sonst fehlen alle Abbildungen.
 
 ## Aufbau des Repositorys
 
 ```
 .
-├── index.html      Die vollständige Anleitung (eine Datei, alles inline)
-├── bilder/         45 Abbildungen, 7 GIF-Sequenzen, Logo
+├── index.html      Startseite ("Start Learning", BKWI-Logo, Animationen)
+├── anleitung.html  Die vollständige Anleitung (eine Datei, alles inline)
+├── bilder/         49 Abbildungen, 7 GIF-Sequenzen, Logos
 ├── .nojekyll       Verhindert die Jekyll-Verarbeitung auf GitHub Pages
 ├── LICENSE
 └── README.md
 ```
+
+Die Startseite ist reines HTML/CSS/JS ohne externe Bibliotheken. Der
+Sound-Effekt beim Start wird über die Web Audio API erzeugt – es gibt
+also keine Audiodateien. Über den Lautsprecher-Knopf oben rechts lässt
+er sich abschalten; die Einstellung wird im Browser gespeichert.
 
 ## GitHub Pages aktivieren
 
