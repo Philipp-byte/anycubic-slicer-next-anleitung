@@ -167,21 +167,32 @@ body.launch .stage{transform:scale(1.22); opacity:0}
   45%{transform:translateY(9px)}
   100%{transform:translateY(0)}
 }
-/* Neon-Aura hinter dem Logo */
-.logowrap::before{
+/* Neon-Aura hinter dem Logo (am Konvoi, damit overflow:hidden der Tafel sie nicht kappt) */
+.konvoi::before{
   content:''; position:absolute; left:50%; top:50%; translate:-50% -50%;
-  width:82%; height:64%; border-radius:50%; z-index:-1;
+  width:104%; height:88%; border-radius:50%; z-index:-1;
   background:radial-gradient(ellipse,rgba(168,255,0,.32),rgba(168,255,0,.07) 55%,transparent 72%);
   filter:blur(38px); animation:pulseGlow 4.6s ease-in-out infinite;
 }
 @keyframes pulseGlow{50%{opacity:.55; scale:.9}}
-.logowrap img{
-  display:block; width:100%; height:auto;
-  filter:drop-shadow(0 0 30px rgba(168,255,0,.4)) drop-shadow(0 16px 32px rgba(0,0,0,.75));
-  transition:filter .3s ease;
+/* Das Logo als leuchtende Tafel: Bild bleibt komplett, kein Freistellen -
+   das Schwarz des Bildes geht im dunklen Seitenhintergrund auf */
+.logowrap{
+  border-radius:20px; overflow:hidden; background:#000;
+  border:1px solid rgba(168,255,0,.4);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.6),
+    0 0 46px rgba(168,255,0,.22),
+    0 26px 60px rgba(0,0,0,.65);
+  transition:border-color .3s ease, box-shadow .3s ease;
 }
-.hero:hover .logowrap img{
-  filter:drop-shadow(0 0 46px rgba(168,255,0,.75)) drop-shadow(0 16px 32px rgba(0,0,0,.75));
+.logowrap img{display:block; width:100%; height:auto}
+.hero:hover .logowrap{
+  border-color:rgba(168,255,0,.85);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.6),
+    0 0 70px rgba(168,255,0,.4),
+    0 26px 60px rgba(0,0,0,.65);
 }
 
 /* Abschleppseil zwischen Logo und Zug */
